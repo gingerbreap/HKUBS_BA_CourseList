@@ -4,6 +4,7 @@ import PlannerCalendar from '../components/PlannerCalendar'
 import WeekdayStrip from '../components/WeekdayStrip'
 import { useCourses, useRequirements } from '../hooks/useCoursesData'
 import { useSelections } from '../hooks/useSelections'
+import { useWishlist } from '../hooks/useWishlist'
 import { buildCalendarEvents } from '../utils/calendarEvents'
 import { detectConflicts } from '../utils/conflicts'
 import { formatSectionInstructors } from '../utils/instructors'
@@ -14,13 +15,27 @@ function TimeBadge({ bucket }: { bucket: string }) {
   return <span className={`badge ${cls}`}>{bucket}</span>
 }
 
+function itemKey(s: SelectedSection): string {
+  return `${s.courseCode}-M${s.module}-${s.sectionId}`
+}
+
 export default function Planner() {
   const { courses, loading } = useCourses()
   const requirements = useRequirements()
   const { selections, toggle, isSelected, getForCourseCode, clear } = useSelections()
+  const {
+    wishlist,
+    toggle: toggleWishlist,
+    remove: removeWishlist,
+    reorder,
+    isInWishlist,
+    clear: clearWishlist,
+  } = useWishlist()
   const [tab, setTab] = useState<'selected' | 'browse'>('selected')
   const [duplicateMsg, setDuplicateMsg] = useState<string | null>(null)
   const [detailCode, setDetailCode] = useState<string | null>(null)
+  const [dragFrom, setDragFrom] = useState<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
 
   useEffect(() => {
     if (!duplicateMsg) return
@@ -38,7 +53,24 @@ export default function Planner() {
         )
       }
     }
+    return result
   }, [toggle, getForCourseCode])
+
+  const promoteFromWishlist = useCallback((s: SelectedSection) => {
+    if (isSelected(s.courseCode, s.module, s.sectionId)) {
+      removeWishlist(s)
+      return
+    }
+    const existing = getForCourseCode(s.courseCode)
+    if (existing) {
+      setDuplicateMsg(
+        `「${s.courseCode}」已在规划中（${existing.sectionId}班 · Module ${existing.module}），请先移除后再从备选中选择。`,
+      )
+      return
+    }
+    toggle(s)
+    removeWishlist(s)
+  }, [isSelected, getForCourseCode, toggle, removeWishlist])
 
   const conflicts = useMemo(() => detectConflicts(selections, courses), [selections, courses])
   const calendarEvents = useMemo(() => buildCalendarEvents(selections, courses), [selections, courses])
@@ -68,8 +100,6 @@ export default function Planner() {
     return map
   }, [courses])
 
-  // Resolve the selected class against the current data so the planner always
-  // shows the instructor(s) actually teaching it.
   const findSection = (courseCode: string, module: number, sectionId: string) =>
     courses
       .find(c => c.courseCode === courseCode && c.module === module)
@@ -151,47 +181,135 @@ export default function Planner() {
       </div>
 
       {tab === 'selected' && (
-        <div className="card" style={{ padding: 0 }}>
-          {selections.length === 0 ? (
-            <div style={{ padding: 24, textAlign: 'center', color: '#5f6368' }}>
-              尚未选择任何课程，点击「浏览 & 添加」开始选课
-            </div>
-          ) : (
-            <>
-              {selections.map(s => {
-                const sec = findSection(s.courseCode, s.module, s.sectionId)
-                const instructorLabel = sec ? formatSectionInstructors(sec) : s.instructor
-                return (
-                  <div className="selection-item" key={`${s.courseCode}-M${s.module}-${s.sectionId}`}>
-                    <div
-                      className="selection-item-main"
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setDetailCode(s.courseCode)}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailCode(s.courseCode) } }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontWeight: 600, fontSize: 14 }}>
-                        <span>{s.courseCode} {s.sectionId}班</span>
-                        {sec && <TimeBadge bucket={sec.timeBucket} />}
-                        {sec && <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />}
-                        <span className={`badge ${s.courseType === 'Core' ? 'badge-core' : s.courseType === 'Capstone' ? 'badge-capstone' : 'badge-elective'}`}>
-                          {s.courseType}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 13, color: '#5f6368' }}>
-                        {s.courseTitle} · 授课教授：{instructorLabel} · Module {s.module}
-                      </div>
-                    </div>
-                    <button className="remove-btn" onClick={() => handleToggle(s)}>移除</button>
-                  </div>
-                )
-              })}
-              <div style={{ padding: 12, textAlign: 'right' }}>
-                <button className="remove-btn" onClick={clear}>清空全部</button>
+        <>
+          <div className="card" style={{ padding: 0 }}>
+            {selections.length === 0 ? (
+              <div style={{ padding: 24, textAlign: 'center', color: '#5f6368' }}>
+                尚未选择任何课程，点击「浏览 & 添加」开始选课
               </div>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                {selections.map(s => {
+                  const sec = findSection(s.courseCode, s.module, s.sectionId)
+                  const instructorLabel = sec ? formatSectionInstructors(sec) : s.instructor
+                  return (
+                    <div className="selection-item" key={itemKey(s)}>
+                      <div
+                        className="selection-item-main"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setDetailCode(s.courseCode)}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailCode(s.courseCode) } }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontWeight: 600, fontSize: 14 }}>
+                          <span>{s.courseCode} {s.sectionId}班</span>
+                          {sec && <TimeBadge bucket={sec.timeBucket} />}
+                          {sec && <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />}
+                          <span className={`badge ${s.courseType === 'Core' ? 'badge-core' : s.courseType === 'Capstone' ? 'badge-capstone' : 'badge-elective'}`}>
+                            {s.courseType}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 13, color: '#5f6368' }}>
+                          {s.courseTitle} · 授课教授：{instructorLabel} · Module {s.module}
+                        </div>
+                      </div>
+                      <button className="remove-btn" onClick={() => handleToggle(s)}>移除</button>
+                    </div>
+                  )
+                })}
+                <div style={{ padding: 12, textAlign: 'right' }}>
+                  <button className="remove-btn" onClick={clear}>清空全部</button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="wishlist-section">
+            <div className="wishlist-header">
+              <span>
+                备选列表 ({wishlist.length})
+                <span className="wishlist-hint"> · 可拖动排序；「选择」加入正式已选</span>
+              </span>
+              {wishlist.length > 0 && (
+                <button className="remove-btn" onClick={clearWishlist}>清空备选</button>
+              )}
+            </div>
+            <div className="card" style={{ padding: 0 }}>
+              {wishlist.length === 0 ? (
+                <div style={{ padding: 24, textAlign: 'center', color: '#5f6368' }}>
+                  暂无备选课程，在「浏览 & 添加」中点击「加入备选」
+                </div>
+              ) : (
+                wishlist.map((s, index) => {
+                  const sec = findSection(s.courseCode, s.module, s.sectionId)
+                  const instructorLabel = sec ? formatSectionInstructors(sec) : s.instructor
+                  return (
+                    <div
+                      className={`selection-item wishlist-item ${dragFrom === index ? 'dragging' : ''} ${dragOver === index ? 'drag-over' : ''}`}
+                      key={itemKey(s)}
+                      onDragOver={e => {
+                        e.preventDefault()
+                        if (dragOver !== index) setDragOver(index)
+                      }}
+                      onDrop={e => {
+                        e.preventDefault()
+                        if (dragFrom !== null && dragFrom !== index) reorder(dragFrom, index)
+                        setDragFrom(null)
+                        setDragOver(null)
+                      }}
+                      onDragEnd={() => {
+                        setDragFrom(null)
+                        setDragOver(null)
+                      }}
+                    >
+                      <div className="wishlist-actions">
+                        <span
+                          className="drag-handle"
+                          title="拖动排序"
+                          draggable
+                          onDragStart={e => {
+                            setDragFrom(index)
+                            e.dataTransfer.effectAllowed = 'move'
+                            e.dataTransfer.setData('text/plain', String(index))
+                          }}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          ⋮⋮
+                        </span>
+                        <button
+                          className="select-btn"
+                          onClick={() => promoteFromWishlist(s)}
+                        >
+                          选择
+                        </button>
+                      </div>
+                      <div
+                        className="selection-item-main"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setDetailCode(s.courseCode)}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailCode(s.courseCode) } }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontWeight: 600, fontSize: 14 }}>
+                          <span>{s.courseCode} {s.sectionId}班</span>
+                          {sec && <TimeBadge bucket={sec.timeBucket} />}
+                          {sec && <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />}
+                          <span className={`badge ${s.courseType === 'Core' ? 'badge-core' : s.courseType === 'Capstone' ? 'badge-capstone' : 'badge-elective'}`}>
+                            {s.courseType}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 13, color: '#5f6368' }}>
+                          {s.courseTitle} · 授课教授：{instructorLabel} · Module {s.module}
+                        </div>
+                      </div>
+                      <button className="remove-btn" onClick={() => removeWishlist(s)}>移除</button>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       {tab === 'browse' && (
@@ -219,6 +337,15 @@ export default function Planner() {
                     const existingForCode = getForCourseCode(course.courseCode)
                     const blockedByDuplicate = !!existingForCode && !sel
                     const instructorLabel = formatSectionInstructors(sec)
+                    const inWishlist = isInWishlist(course.courseCode, course.module, sec.sectionId)
+                    const candidate: SelectedSection = {
+                      courseCode: course.courseCode,
+                      courseTitle: course.courseTitle,
+                      module: course.module,
+                      courseType: course.courseType,
+                      sectionId: sec.sectionId,
+                      instructor: instructorLabel,
+                    }
                     const duplicateHint = blockedByDuplicate && existingForCode
                       ? `已选 ${existingForCode.sectionId}班（Module ${existingForCode.module}），请先移除`
                       : undefined
@@ -240,21 +367,22 @@ export default function Planner() {
                             <span className="duplicate-hint">{duplicateHint}</span>
                           )}
                         </div>
-                        <button
-                          className={`select-btn ${sel ? 'selected' : ''} ${blockedByDuplicate ? 'disabled' : ''}`}
-                          disabled={blockedByDuplicate}
-                          title={duplicateHint}
-                          onClick={() => handleToggle({
-                            courseCode: course.courseCode,
-                            courseTitle: course.courseTitle,
-                            module: course.module,
-                            courseType: course.courseType,
-                            sectionId: sec.sectionId,
-                            instructor: instructorLabel,
-                          })}
-                        >
-                          {sel ? '已选 ✓' : blockedByDuplicate ? '不可选' : '选择'}
-                        </button>
+                        <div className="section-actions">
+                          <button
+                            className={`select-btn ${sel ? 'selected' : ''} ${blockedByDuplicate ? 'disabled' : ''}`}
+                            disabled={blockedByDuplicate}
+                            title={duplicateHint}
+                            onClick={() => handleToggle(candidate)}
+                          >
+                            {sel ? '已选 ✓' : blockedByDuplicate ? '不可选' : '选择'}
+                          </button>
+                          <button
+                            className={`alt-btn ${inWishlist ? 'in-wishlist' : ''}`}
+                            onClick={() => toggleWishlist(candidate)}
+                          >
+                            {inWishlist ? '已备选 ✓' : '加入备选'}
+                          </button>
+                        </div>
                       </div>
                     )
                   })}
