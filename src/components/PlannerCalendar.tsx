@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
+import IcsExportModal from './IcsExportModal'
 import { CALENDAR_END, CALENDAR_START, holidayLabel, isHoliday } from '../data/holidays'
 import { calendarEventLabel, eventsByDate, type CalendarEvent } from '../utils/calendarEvents'
-import { buildIcsContent, downloadIcs } from '../utils/exportIcs'
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -95,6 +95,7 @@ interface PlannerCalendarProps {
 
 export default function PlannerCalendar({ events }: PlannerCalendarProps) {
   const [{ year, month }, setView] = useState(defaultMonth)
+  const [exportOpen, setExportOpen] = useState(false)
   const byDate = useMemo(() => eventsByDate(events), [events])
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month])
 
@@ -120,8 +121,7 @@ export default function PlannerCalendar({ events }: PlannerCalendarProps) {
   }).length
 
   const handleExport = () => {
-    const content = buildIcsContent(events)
-    downloadIcs(content, 'hkubs-ba-planner.ics')
+    setExportOpen(true)
   }
 
   return (
@@ -210,6 +210,10 @@ export default function PlannerCalendar({ events }: PlannerCalendarProps) {
           )
         })}
       </div>
+
+      {exportOpen && (
+        <IcsExportModal events={events} onClose={() => setExportOpen(false)} />
+      )}
     </div>
   )
 }

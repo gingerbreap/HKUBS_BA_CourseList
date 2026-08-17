@@ -674,3 +674,120 @@ a:hover { text-decoration: underline; }
 }
 .modal-body .detail-header h1 { padding-right: 36px; }
 .pdf-viewer--compact { height: min(420px, 45vh); }
+
+/* ICS export format modal */
+.ics-export-modal {
+  width: min(720px, 90vw);
+}
+.ics-export-body {
+  padding-top: 16px;
+}
+.ics-export-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  padding-right: 36px;
+}
+.ics-export-intro {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+.ics-export-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.ics-export-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.ics-export-input,
+.ics-export-textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.ics-export-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.45;
+}
+.ics-export-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.ics-export-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.ics-export-table th,
+.ics-export-table td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+.ics-export-table th {
+  background: #f1f3f4;
+  font-weight: 600;
+}
+.ics-export-table code {
+  font-size: 12px;
+  background: #f8f9fa;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.ics-export-location-note {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+.ics-export-preview {
+  background: #f1f3f4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.ics-export-preview-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.ics-export-preview-block {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ics-export-preview-desc {
+  margin-top: 8px;
+}
+.ics-export-preview-desc pre {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ics-export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.ics-export-actions .select-btn {
+  padding: 8px 20px;
+  font-size: 14px;
+}
+.ics-export-actions .alt-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+}

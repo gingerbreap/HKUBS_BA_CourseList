@@ -1,4 +1,5 @@
-import { calendarEventLabel, type CalendarEvent } from './calendarEvents'
+import type { CalendarEvent } from './calendarEvents'
+import { applyIcsTemplate, type IcsFormatTemplates } from './icsFormat'
 
 const CRLF = '\r\n'
 
@@ -42,16 +43,10 @@ function isTimed(ev: CalendarEvent): boolean {
   return Boolean(ev.startTime && ev.endTime)
 }
 
-function isFinalEvent(ev: CalendarEvent): boolean {
-  return ev.sessionType === 'exam' || ev.sessionType === 'presentation' || ev.sessionType === 'other'
-}
-
-function eventDescription(ev: CalendarEvent): string {
-  if (isFinalEvent(ev)) return ev.courseTitle
-  return `${ev.courseTitle}\n${ev.instructor} (Class ${ev.sectionId})`
-}
-
-export function buildIcsContent(events: CalendarEvent[]): string {
+export function buildIcsContent(
+  events: CalendarEvent[],
+  templates: IcsFormatTemplates,
+): string {
   const stamp = dtStampUtc()
   const lines: string[] = [
     'BEGIN:VCALENDAR',
@@ -62,8 +57,8 @@ export function buildIcsContent(events: CalendarEvent[]): string {
   ]
 
   for (const ev of events) {
-    const summary = calendarEventLabel(ev)
-    const description = eventDescription(ev)
+    const summary = applyIcsTemplate(templates.summary, ev)
+    const description = applyIcsTemplate(templates.description, ev)
 
     lines.push('BEGIN:VEVENT')
     lines.push(`UID:${ev.id}@hkubs-ba-planner`)
