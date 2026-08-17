@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import IcsExportModal from './IcsExportModal'
+import StudyStatusImportModal from './StudyStatusImportModal'
 import { CALENDAR_END, CALENDAR_START, holidayLabel, isHoliday } from '../data/holidays'
 import { calendarEventLabel, eventsByDate, type CalendarEvent } from '../utils/calendarEvents'
+import type { Course, SelectedSection } from '../types'
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -91,11 +93,18 @@ function EventChip({ event }: { event: CalendarEvent }) {
 
 interface PlannerCalendarProps {
   events: CalendarEvent[]
+  courses: Course[]
+  onImportSelections: (selections: SelectedSection[]) => void
 }
 
-export default function PlannerCalendar({ events }: PlannerCalendarProps) {
+export default function PlannerCalendar({
+  events,
+  courses,
+  onImportSelections,
+}: PlannerCalendarProps) {
   const [{ year, month }, setView] = useState(defaultMonth)
   const [exportOpen, setExportOpen] = useState(false)
+  const [studyStatusOpen, setStudyStatusOpen] = useState(false)
   const byDate = useMemo(() => eventsByDate(events), [events])
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month])
 
@@ -144,6 +153,14 @@ export default function PlannerCalendar({ events }: PlannerCalendarProps) {
             title={events.length === 0 ? '请先选择课程' : '导出为 ICS 日历文件'}
           >
             导出 ICS
+          </button>
+          <button
+            type="button"
+            className="calendar-export-btn"
+            onClick={() => setStudyStatusOpen(true)}
+            title="从 Study Status 粘贴内容导入已选课程"
+          >
+            导入 Study Status
           </button>
           <button type="button" className="calendar-nav-btn" onClick={prevMonth} disabled={atStart} aria-label="上个月">
             ‹
@@ -213,6 +230,13 @@ export default function PlannerCalendar({ events }: PlannerCalendarProps) {
 
       {exportOpen && (
         <IcsExportModal events={events} onClose={() => setExportOpen(false)} />
+      )}
+      {studyStatusOpen && (
+        <StudyStatusImportModal
+          courses={courses}
+          onImport={onImportSelections}
+          onClose={() => setStudyStatusOpen(false)}
+        />
       )}
     </div>
   )
