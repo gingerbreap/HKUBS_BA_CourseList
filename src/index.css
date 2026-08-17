@@ -752,17 +752,17 @@ a:hover { text-decoration: underline; }
   color: var(--text-secondary);
   margin: 0 0 12px;
 }
+.ics-export-preview-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
 .ics-export-preview {
   background: #f1f3f4;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 14px;
   margin-bottom: 16px;
-}
-.ics-export-preview-title {
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 8px;
 }
 .ics-export-preview-block {
   font-size: 13px;

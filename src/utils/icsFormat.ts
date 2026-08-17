@@ -10,7 +10,7 @@ export const ICS_FORMAT_STORAGE_KEY = 'msba-ics-export-format'
 
 export const DEFAULT_ICS_TEMPLATES: IcsFormatTemplates = {
   summary: '@code (@type): @name @ @location',
-  description: '@code (@class): @name (@type)\nLocation: @location\nProfessor: Prof. @Prof',
+  description: '@code (@class): @name (@type)\nLocation: @location\nProfessor: Prof. @prof',
 }
 
 /** Sample data for live preview (MSBA7001 Class A). */
@@ -37,8 +37,7 @@ export const ICS_PLACEHOLDERS: {
   { key: '@name', label: '课程名称', example: 'Python for Data Analytics' },
   { key: '@type', label: '课程类型', example: 'LEC' },
   { key: '@location', label: '教室', example: 'LT104' },
-  { key: '@prof', label: '教授（含 Prof.）', example: 'Prof. Chao DING' },
-  { key: '@Prof', label: '教授姓名', example: 'Chao DING' },
+  { key: '@prof', label: '教授姓名', example: 'Chao DING' },
 ]
 
 function sessionTypeLabel(ev: CalendarEvent): string {
@@ -58,8 +57,7 @@ export function buildPlaceholderMap(ev: CalendarEvent): Record<string, string> {
     '@name': ev.courseTitle,
     '@type': sessionTypeLabel(ev),
     '@location': ev.venue || '',
-    '@prof': ev.instructor || '',
-    '@Prof': professorShort(ev.instructor || ''),
+    '@prof': professorShort(ev.instructor || ''),
   }
 }
 
@@ -67,8 +65,7 @@ export function buildPlaceholderMap(ev: CalendarEvent): Record<string, string> {
 export function applyIcsTemplate(template: string, ev: CalendarEvent): string {
   const map = buildPlaceholderMap(ev)
   let out = template
-  // @Prof before @prof to avoid partial replacement
-  for (const key of ['@location', '@class', '@code', '@name', '@type', '@Prof', '@prof']) {
+  for (const key of ['@location', '@class', '@code', '@name', '@type', '@prof']) {
     out = out.split(key).join(map[key] ?? key)
   }
   return out
@@ -79,9 +76,11 @@ export function loadIcsTemplates(): IcsFormatTemplates {
     const raw = localStorage.getItem(ICS_FORMAT_STORAGE_KEY)
     if (!raw) return { ...DEFAULT_ICS_TEMPLATES }
     const parsed = JSON.parse(raw) as Partial<IcsFormatTemplates>
+    // Migrate legacy @Prof token to @prof
+    const migrate = (s: string) => s.replaceAll('@Prof', '@prof')
     return {
-      summary: parsed.summary ?? DEFAULT_ICS_TEMPLATES.summary,
-      description: parsed.description ?? DEFAULT_ICS_TEMPLATES.description,
+      summary: migrate(parsed.summary ?? DEFAULT_ICS_TEMPLATES.summary),
+      description: migrate(parsed.description ?? DEFAULT_ICS_TEMPLATES.description),
     }
   } catch {
     return { ...DEFAULT_ICS_TEMPLATES }

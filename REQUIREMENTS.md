@@ -66,7 +66,7 @@
   - 期末考 → `MSBAXXXX Final Exam`
   - Final Presentation → `MSBAXXXX Final Presentation`
 - **假日只出现在屏幕日历上**，不写入 ICS。
-- **ICS 不含假日**。课程相关事件 SUMMARY / DESCRIPTION 支持用户自定义模板（弹窗「自定义导出课程事件格式」），可用参数：`@code`、`@class`、`@name`、`@type`、`@location`、`@prof`、`@Prof`；默认 Summary 为 `@code (@type): @name @ @location`，Description 为多行模板；底部实时 Preview；教室始终写入 ICS **LOCATION** 字段。
+- **ICS 不含假日**。课程相关事件 SUMMARY / DESCRIPTION 支持用户自定义模板（弹窗「自定义导出课程事件格式」），可用参数：`@code`、`@class`、`@name`、`@type`、`@location`、`@prof`；默认 Summary 为 `@code (@type): @name @ @location`，Description 为多行模板；底部实时 Preview；教室始终写入 ICS **LOCATION** 字段。
 - 星期条（weekday strip）仅为**信息展示**，不参与冲突计算。
 
 ## 四、明确排除项

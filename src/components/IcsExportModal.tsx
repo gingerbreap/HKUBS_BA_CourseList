@@ -121,8 +121,8 @@ export default function IcsExportModal({ events, onClose }: IcsExportModalProps)
             教室信息会始终写入 ICS 的 <strong>LOCATION</strong> 字段（与 @location 参数一致）。
           </p>
 
+          <div className="ics-export-preview-title">预览</div>
           <div className="ics-export-preview">
-            <div className="ics-export-preview-title">Preview</div>
             <div className="ics-export-preview-block">
               <div><strong>Summary:</strong> {previewSummary}</div>
               <div className="ics-export-preview-desc">
