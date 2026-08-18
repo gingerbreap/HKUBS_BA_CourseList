@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import IcsExportModal from './IcsExportModal'
 import StudyStatusImportModal from './StudyStatusImportModal'
+import TeachingPlanUpdateNotice from './TeachingPlanUpdateNotice'
 import { CALENDAR_END, CALENDAR_START, holidayLabel, isHoliday } from '../data/holidays'
 import { calendarEventLabel, eventsByDate, type CalendarEvent } from '../utils/calendarEvents'
 import type { Course, SelectedSection } from '../types'
@@ -135,6 +136,8 @@ export default function PlannerCalendar({
 
   return (
     <div className="card planner-calendar">
+      <TeachingPlanUpdateNotice compact />
+
       <div className="calendar-header">
         <div>
           <div className="calendar-title">选课日历</div>
