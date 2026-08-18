@@ -1083,11 +1083,23 @@ a:hover { text-decoration: underline; }
   box-sizing: border-box;
 }
 .ics-export-preview-empty {
-  display: block;
-  color: var(--text-secondary);
-  font-size: 13px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px 16px;
+}
+.ics-export-empty-notice {
+  margin: 0;
+  text-align: center;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.ics-export-preview-empty .ics-export-empty-notice {
+  color: var(--text-secondary);
+}
+.ics-export-empty-notice--export {
+  margin: 4px 0 12px;
 }
 .ics-preview-chip {
   width: 142px;
