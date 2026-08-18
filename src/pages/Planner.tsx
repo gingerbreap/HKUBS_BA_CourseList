@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react'
 import ConflictNotices from '../components/ConflictNotices'
 import CourseDetailModal from '../components/CourseDetailModal'
 import PlannerCalendar from '../components/PlannerCalendar'
+import StreamTagBadges from '../components/StreamTagBadges'
 import TeachingPlanUpdateNotice from '../components/TeachingPlanUpdateNotice'
 import WeekdayStrip from '../components/WeekdayStrip'
 import { useCourses, useRequirements } from '../hooks/useCoursesData'
@@ -120,6 +121,9 @@ export default function Planner() {
     [selections],
   )
 
+  const findCourse = (courseCode: string, module: number) =>
+    courses.find(c => c.courseCode === courseCode && c.module === module)
+
   const findSection = (courseCode: string, module: number, sectionId: string) =>
     courses
       .find(c => c.courseCode === courseCode && c.module === module)
@@ -213,6 +217,7 @@ export default function Planner() {
               <>
                 {displayedSelections.map(s => {
                   const sec = findSection(s.courseCode, s.module, s.sectionId)
+                  const course = findCourse(s.courseCode, s.module)
                   const instructorLabel = sec ? formatSectionInstructors(sec) : s.instructor
                   return (
                     <div className="selection-item" key={itemKey(s)}>
@@ -230,6 +235,7 @@ export default function Planner() {
                           <span className={`badge ${s.courseType === 'Core' ? 'badge-core' : s.courseType === 'Capstone' ? 'badge-capstone' : 'badge-elective'}`}>
                             {s.courseType}
                           </span>
+                          {course && <StreamTagBadges tags={course.streamTags} />}
                         </div>
                         <div style={{ fontSize: 13, color: '#5f6368' }}>
                           {s.courseTitle} · 授课教授：{instructorLabel} · Module {s.module}
@@ -264,6 +270,7 @@ export default function Planner() {
               ) : (
                 wishlist.map((s, index) => {
                   const sec = findSection(s.courseCode, s.module, s.sectionId)
+                  const course = findCourse(s.courseCode, s.module)
                   const instructorLabel = sec ? formatSectionInstructors(sec) : s.instructor
                   return (
                     <div
@@ -319,6 +326,7 @@ export default function Planner() {
                           <span className={`badge ${s.courseType === 'Core' ? 'badge-core' : s.courseType === 'Capstone' ? 'badge-capstone' : 'badge-elective'}`}>
                             {s.courseType}
                           </span>
+                          {course && <StreamTagBadges tags={course.streamTags} />}
                         </div>
                         <div style={{ fontSize: 13, color: '#5f6368' }}>
                           {s.courseTitle} · 授课教授：{instructorLabel} · Module {s.module}
@@ -353,6 +361,7 @@ export default function Planner() {
                     <span className={`badge ${course.courseType === 'Core' ? 'badge-core' : course.courseType === 'Capstone' ? 'badge-capstone' : 'badge-elective'}`} style={{ marginLeft: 8 }}>
                       {course.courseType}
                     </span>
+                    <StreamTagBadges tags={course.streamTags} />
                   </div>
                   {course.sections.map(sec => {
                     const sel = isSelected(course.courseCode, course.module, sec.sectionId)

@@ -1,17 +1,11 @@
-import { useMemo } from 'react'
+import { Fragment, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCourses } from '../hooks/useCoursesData'
 import WeekdayStrip from '../components/WeekdayStrip'
+import StreamTagBadges from '../components/StreamTagBadges'
 import { formatSectionInstructors } from '../utils/instructors'
-import type { Course, ExamOrFinal, Section } from '../types'
-
-/** Timetable-only: shorten "Final Presentation" so the exam line fits the card. */
-function timetableExamRaw(exam: ExamOrFinal): string {
-  if (exam.kind === 'presentation') {
-    return exam.raw.replace(/\bFinal Presentation\b/g, 'FINAL PRE')
-  }
-  return exam.raw
-}
+import { timetableExamLine } from '../utils/exams'
+import type { Course, Section } from '../types'
 
 function TimeBadge({ bucket }: { bucket: string }) {
   const cls = bucket === 'AM' ? 'badge-am' : bucket === 'PM' ? 'badge-pm' : 'badge-nt'
@@ -33,6 +27,29 @@ function summarizeDates(section: Section): string {
   return `${first} ~ ${last} | ${time} | ${lectures.length}次课`
 }
 
+function TimetableInstructor({ section }: { section: Section }) {
+  const label = formatSectionInstructors(section)
+  const parts = label.split(' & ')
+  if (parts.length < 2) {
+    return <span className="course-instructor">{label}</span>
+  }
+  return (
+    <span className="course-instructor course-instructor--split">
+      {parts.map((part, index) => (
+        <Fragment key={index}>
+          {index > 0 && (
+            <>
+              <wbr />
+              <span className="course-instructor-amp"> & </span>
+            </>
+          )}
+          {part}
+        </Fragment>
+      ))}
+    </span>
+  )
+}
+
 function CourseCard({ course }: { course: Course }) {
   const navigate = useNavigate()
 
@@ -45,7 +62,7 @@ function CourseCard({ course }: { course: Course }) {
         </div>
         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
           <TypeBadge type={course.courseType} />
-          {course.streamTags.map(t => <span key={t} className="badge badge-stream">{t}</span>)}
+          <StreamTagBadges tags={course.streamTags} />
         </div>
       </div>
       {course.sections.map(sec => (
@@ -53,19 +70,19 @@ function CourseCard({ course }: { course: Course }) {
           <span className="section-id">{sec.sectionId}班</span>
           <TimeBadge bucket={sec.timeBucket} />
           <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />
-          <span className="course-instructor">{formatSectionInstructors(sec)}</span>
+          <TimetableInstructor section={sec} />
           <span className="section-time">{summarizeDates(sec)}</span>
         </div>
       ))}
       {course.sections.some(s => s.examOrFinal) ? (
         course.sections.filter(s => s.examOrFinal).map(s => (
           <div key={s.sectionId} style={{ fontSize: 12, color: '#5f6368', paddingTop: 4 }}>
-            📝 {s.sectionId}班 {timetableExamRaw(s.examOrFinal!)}
+            📝 {s.sectionId}班 {timetableExamLine(s.examOrFinal!)}
           </div>
         ))
       ) : course.examOrFinal ? (
         <div style={{ fontSize: 12, color: '#5f6368', paddingTop: 4 }}>
-          📝 {timetableExamRaw(course.examOrFinal)}
+          📝 {timetableExamLine(course.examOrFinal)}
         </div>
       ) : null}
     </div>
