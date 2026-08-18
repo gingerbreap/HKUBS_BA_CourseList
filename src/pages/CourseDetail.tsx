@@ -8,6 +8,7 @@ import {
   meetingInstructorNames,
   sectionHasInstructor,
 } from '../utils/instructors'
+import { examKindTypeLabel, resolveExam } from '../utils/exams'
 import type { Course, ExamOrFinal, Section } from '../types'
 
 const BASE = import.meta.env.BASE_URL
@@ -17,11 +18,24 @@ function TimeBadge({ bucket }: { bucket: string }) {
   return <span className={`badge ${cls}`}>{bucket}</span>
 }
 
-function ExamNote({ exam }: { exam: ExamOrFinal }) {
+function examBadgeClass(exam: ExamOrFinal): string {
+  return exam.kind === 'presentation' || exam.kind === 'other' ? 'badge-presentation' : 'badge-exam'
+}
+
+function FinalSessionRow({ exam }: { exam: ExamOrFinal }) {
+  const date = exam.date || '-'
+  const time = exam.startTime && exam.endTime ? `${exam.startTime}-${exam.endTime}` : '-'
+  const venue = exam.venue || '-'
   return (
-    <div style={{ fontSize: 13, color: '#5f6368', marginTop: 4 }}>
-      📝 考试/期末：{exam.raw}
-    </div>
+    <tr style={{ borderBottom: '1px solid #f1f3f4' }}>
+      <td style={{ padding: '4px 8px' }}>{date}</td>
+      <td style={{ padding: '4px 8px' }}>{time}</td>
+      <td style={{ padding: '4px 8px' }}>{venue}</td>
+      <td style={{ padding: '4px 8px' }}>
+        <span className={`badge ${examBadgeClass(exam)}`}>{examKindTypeLabel(exam.kind)}</span>
+      </td>
+      <td style={{ padding: '4px 8px', color: 'var(--text-secondary)' }}>-</td>
+    </tr>
   )
 }
 
@@ -117,12 +131,16 @@ export function CourseDetailContent({
 
       {coursesForInstructor.map(course => {
         const secs = sectionsOf(course)
-        const hasSectionExam = secs.some(s => s.examOrFinal)
         return (
           <div key={course.module} style={{ marginBottom: 24 }}>
             <div className="module-header" style={{ fontSize: 14 }}>Module {course.module}</div>
 
-            {secs.map(sec => (
+            {secs.map(sec => {
+              const exam = resolveExam(course, sec)
+              const tutorialMeetings = sec.meetings.filter(m => m.sessionType === 'tutorial')
+              const tutKey = `${course.module}-${sec.sectionId}`
+              const tutExpanded = !!tutExpandedBySectionKey[tutKey]
+              return (
               <div className="card" key={sec.sectionId}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                   <span className="section-id" style={{ fontSize: 16 }}>{sec.sectionId}班</span>
@@ -161,53 +179,44 @@ export function CourseDetailContent({
                           </tr>
                         )
                       })}
+                    {exam && <FinalSessionRow exam={exam} />}
 
-                    {(() => {
-                      const tutorialMeetings = sec.meetings.filter(m => m.sessionType === 'tutorial')
-                      if (tutorialMeetings.length === 0) return null
-                      const key = `${course.module}-${sec.sectionId}`
-                      const expanded = !!tutExpandedBySectionKey[key]
-                      return (
-                        <>
-                          <tr>
-                            <td colSpan={5} style={{ padding: '6px 8px' }}>
-                              <button
-                                type="button"
-                                className="tut-toggle-btn"
-                                onClick={() =>
-                                  setTutExpandedBySectionKey(prev => ({ ...prev, [key]: !prev[key] }))
-                                }
-                              >
-                                {expanded ? `TUT (${tutorialMeetings.length} sessions) (Hide)` : `TUT (${tutorialMeetings.length} sessions) (Show)`}
-                              </button>
-                            </td>
-                          </tr>
-                          {expanded &&
-                            tutorialMeetings.map((m, i) => (
-                              <tr key={i} style={{ borderBottom: '1px solid #f1f3f4' }}>
-                                <td style={{ padding: '4px 8px' }}>{m.date}</td>
-                                <td style={{ padding: '4px 8px' }}>{m.startTime}-{m.endTime}</td>
-                                <td style={{ padding: '4px 8px' }}>{m.venue}</td>
-                                <td style={{ padding: '4px 8px' }}>
-                                  <span className="badge badge-capstone">TUT</span>
-                                </td>
-                                <td style={{ padding: '4px 8px', color: 'var(--text-secondary)' }}>
-                                  {meetingInstructorNames(sec, m).join(' / ')}
-                                </td>
-                              </tr>
-                            ))}
-                        </>
-                      )
-                    })()}
+                    {tutorialMeetings.length > 0 && (
+                      <>
+                        <tr>
+                          <td colSpan={5} style={{ padding: '6px 8px' }}>
+                            <button
+                              type="button"
+                              className="tut-toggle-btn"
+                              onClick={() =>
+                                setTutExpandedBySectionKey(prev => ({ ...prev, [tutKey]: !prev[tutKey] }))
+                              }
+                            >
+                              {tutExpanded ? `TUT (${tutorialMeetings.length} sessions) (Hide)` : `TUT (${tutorialMeetings.length} sessions) (Show)`}
+                            </button>
+                          </td>
+                        </tr>
+                        {tutExpanded &&
+                          tutorialMeetings.map((m, i) => (
+                            <tr key={`tut-${i}`} style={{ borderBottom: '1px solid #f1f3f4' }}>
+                              <td style={{ padding: '4px 8px' }}>{m.date}</td>
+                              <td style={{ padding: '4px 8px' }}>{m.startTime}-{m.endTime}</td>
+                              <td style={{ padding: '4px 8px' }}>{m.venue}</td>
+                              <td style={{ padding: '4px 8px' }}>
+                                <span className="badge badge-capstone">TUT</span>
+                              </td>
+                              <td style={{ padding: '4px 8px', color: 'var(--text-secondary)' }}>
+                                {meetingInstructorNames(sec, m).join(' / ')}
+                              </td>
+                            </tr>
+                          ))}
+                      </>
+                    )}
                   </tbody>
                 </table>
-                {sec.examOrFinal && <ExamNote exam={sec.examOrFinal} />}
               </div>
-            ))}
-
-            {course.examOrFinal && !hasSectionExam && (
-              <ExamNote exam={course.examOrFinal} />
-            )}
+              )
+            })}
           </div>
         )
       })}

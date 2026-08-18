@@ -1,5 +1,5 @@
 import type { CalendarEvent } from './calendarEvents'
-import { applyIcsTemplate, type IcsFormatTemplates } from './icsFormat'
+import { applyIcsEventTemplates, type IcsFormatTemplates } from './icsFormat'
 
 const CRLF = '\r\n'
 
@@ -57,8 +57,7 @@ export function buildIcsContent(
   ]
 
   for (const ev of events) {
-    const summary = applyIcsTemplate(templates.summary, ev)
-    const description = applyIcsTemplate(templates.description, ev)
+    const { summary, description } = applyIcsEventTemplates(templates, ev)
 
     lines.push('BEGIN:VEVENT')
     lines.push(`UID:${ev.id}@hkubs-ba-planner`)

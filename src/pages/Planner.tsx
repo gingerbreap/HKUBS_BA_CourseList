@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
+import ConflictNotices from '../components/ConflictNotices'
 import CourseDetailModal from '../components/CourseDetailModal'
 import PlannerCalendar from '../components/PlannerCalendar'
 import TeachingPlanUpdateNotice from '../components/TeachingPlanUpdateNotice'
@@ -18,6 +19,19 @@ function TimeBadge({ bucket }: { bucket: string }) {
 
 function itemKey(s: SelectedSection): string {
   return `${s.courseCode}-M${s.module}-${s.sectionId}`
+}
+
+function catalogNumber(courseCode: string): number {
+  const match = courseCode.match(/(\d+)/)
+  return match ? Number(match[1]) : Number.POSITIVE_INFINITY
+}
+
+function compareSelections(a: SelectedSection, b: SelectedSection): number {
+  if (a.module !== b.module) return b.module - a.module
+  const numA = catalogNumber(a.courseCode)
+  const numB = catalogNumber(b.courseCode)
+  if (numA !== numB) return numA - numB
+  return a.courseCode.localeCompare(b.courseCode)
 }
 
 export default function Planner() {
@@ -101,6 +115,11 @@ export default function Planner() {
     return map
   }, [courses])
 
+  const displayedSelections = useMemo(
+    () => [...selections].sort(compareSelections),
+    [selections],
+  )
+
   const findSection = (courseCode: string, module: number, sectionId: string) =>
     courses
       .find(c => c.courseCode === courseCode && c.module === module)
@@ -161,12 +180,7 @@ export default function Planner() {
 
       <TeachingPlanUpdateNotice />
 
-      {conflicts.map((c, i) => (
-        <div key={i} className={`conflict-alert ${c.type === 'error' ? 'conflict-error' : 'conflict-warning'}`}>
-          <span>{c.type === 'error' ? '⛔' : '⚠️'}</span>
-          <span>{c.message}</span>
-        </div>
-      ))}
+      <ConflictNotices conflicts={conflicts} />
 
       {duplicateMsg && (
         <div className="planner-toast" role="status">{duplicateMsg}</div>
@@ -176,6 +190,7 @@ export default function Planner() {
         events={calendarEvents}
         courses={courses}
         onImportSelections={replace}
+        onCourseClick={setDetailCode}
       />
 
       <div className="tabs">
@@ -196,7 +211,7 @@ export default function Planner() {
               </div>
             ) : (
               <>
-                {selections.map(s => {
+                {displayedSelections.map(s => {
                   const sec = findSection(s.courseCode, s.module, s.sectionId)
                   const instructorLabel = sec ? formatSectionInstructors(sec) : s.instructor
                   return (
