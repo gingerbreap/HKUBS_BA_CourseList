@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Course, SelectedSection } from '../types'
+import { useI18n } from '../i18n/context'
 import {
   resolveStudyStatusImport,
   type StudyStatusImportResult,
@@ -17,6 +18,7 @@ export default function StudyStatusImportModal({
   onImport,
   onClose,
 }: StudyStatusImportModalProps) {
+  const { t } = useI18n()
   const [text, setText] = useState('')
   const [result, setResult] = useState<StudyStatusImportResult | null>(null)
 
@@ -36,11 +38,11 @@ export default function StudyStatusImportModal({
   const hasRecognizedSelections = Boolean(result && result.selections.length > 0)
   const summary = useMemo(() => {
     if (!result) return null
-    return [
-      `识别到 ${result.parsedCount} 门状态为 Registered 的课程`,
-      `可导入 ${result.selections.length} 门`,
-    ].join('；')
-  }, [result])
+    return t('studyStatus.summary', {
+      parsed: result.parsedCount,
+      importable: result.selections.length,
+    })
+  }, [result, t])
 
   const handleAnalyze = () => {
     setResult(resolveStudyStatusImport(text, courses))
@@ -61,25 +63,29 @@ export default function StudyStatusImportModal({
         aria-labelledby="study-status-import-title"
         onClick={event => event.stopPropagation()}
       >
-        <button type="button" className="modal-close" onClick={onClose} aria-label="关闭">
+        <button type="button" className="modal-close" onClick={onClose} aria-label={t('common.close')}>
           ×
         </button>
         <div className="modal-body study-status-body">
           <h2 id="study-status-import-title" className="study-status-title">
-            导入 Study Status
+            {t('studyStatus.title')}
           </h2>
           <p className="study-status-intro">
-            请在选课系统{' '}
+            {t('studyStatus.introBefore')}{' '}
             <a
               href="https://tpg.hkubs.hku.hk/study-status"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Study Status 页面
+              {t('studyStatus.linkText')}
             </a>
-            {' '}按 Ctrl+A (Mac: Command+A) 全选内容，粘贴到以下方框中
-            <br />
-            如从手机端复制，需至少保证从 Study Status 标题到 Summary 前所有内容被选中。
+            {' '}
+            {t('studyStatus.introAfter').split('\n').map((line, i, arr) => (
+              <span key={i}>
+                {line}
+                {i < arr.length - 1 && <br />}
+              </span>
+            ))}
           </p>
           <textarea
             className="study-status-textarea"
@@ -98,7 +104,7 @@ export default function StudyStatusImportModal({
               onClick={handleAnalyze}
               disabled={!text.trim()}
             >
-              分析内容
+              {t('studyStatus.analyze')}
             </button>
             <button
               type="button"
@@ -106,7 +112,7 @@ export default function StudyStatusImportModal({
               onClick={handleImport}
               disabled={!hasRecognizedSelections}
             >
-              导入并覆盖已选
+              {t('studyStatus.import')}
             </button>
           </div>
 
@@ -117,24 +123,30 @@ export default function StudyStatusImportModal({
                 <ul>
                   {result.selections.map(selection => (
                     <li key={`${selection.courseCode}-${selection.module}-${selection.sectionId}`}>
-                      {selection.courseCode} Class {selection.sectionId} · Module {selection.module}
+                      {t('studyStatus.item', {
+                        code: selection.courseCode,
+                        section: selection.sectionId,
+                        module: selection.module,
+                      })}
                     </li>
                   ))}
                 </ul>
               )}
               {result.parsedCount === 0 && (
-                <p>未找到状态为 Registered 的课程。请确认复制内容包含 Study Status 或 Study Plan 标题及课程记录。</p>
+                <p>{t('studyStatus.noneFound')}</p>
               )}
               {result.unmatched.length > 0 && (
                 <p className="study-status-warning">
-                  无法在 2026-27 教学计划中匹配：
-                  {' '}
-                  {result.unmatched.map(item => `${item.courseCode} Class ${item.sectionId} (M${item.module})`).join('、')}
+                  {t('studyStatus.unmatched', {
+                    list: result.unmatched
+                      .map(item => `${item.courseCode} Class ${item.sectionId} (M${item.module})`)
+                      .join('、'),
+                  })}
                 </p>
               )}
               {result.duplicateCourseCodes.length > 0 && (
                 <p className="study-status-warning">
-                  重复课号已跳过：{result.duplicateCourseCodes.join('、')}
+                  {t('studyStatus.duplicates', { list: result.duplicateCourseCodes.join('、') })}
                 </p>
               )}
             </div>

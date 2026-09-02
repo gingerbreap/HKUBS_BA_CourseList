@@ -1,17 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
-const MOBILE_QUERY = '(max-width: 768px)'
+function detectMobileUserAgent(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(
+    navigator.userAgent,
+  )
+}
 
+/** Mobile detection from user agent only; does not react to viewport resize. */
 export function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const media = window.matchMedia(MOBILE_QUERY)
-    const update = () => setIsMobile(media.matches)
-    update()
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [])
-
+  const [isMobile] = useState(detectMobileUserAgent)
   return isMobile
 }

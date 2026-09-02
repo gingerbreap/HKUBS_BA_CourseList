@@ -45,12 +45,79 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 .navbar .container { display: flex; align-items: center; justify-content: space-between; }
-.navbar-brand { font-size: 18px; font-weight: 700; color: white; }
+.navbar-inner { width: 100%; gap: 12px; }
+.navbar-end {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+.navbar-brand { font-size: 18px; font-weight: 700; color: white; flex-shrink: 0; }
 .navbar-brand:hover { text-decoration: none; }
-.navbar-links { display: flex; gap: 24px; }
-.navbar-links a { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; }
+.navbar-links { display: flex; align-items: center; gap: 24px; }
+.navbar-links a { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; white-space: nowrap; }
 .navbar-links a:hover { color: white; text-decoration: none; }
 .navbar-links a.active { color: white; border-bottom: 2px solid white; padding-bottom: 2px; }
+.navbar-mobile-controls {
+  display: none;
+  align-items: center;
+  gap: 2px;
+}
+.navbar-icon-btn,
+.lang-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: white;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.navbar-icon-btn:hover,
+.lang-picker-btn:hover {
+  opacity: 0.85;
+}
+.lang-picker-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.lang-picker-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 200;
+  min-width: 108px;
+  padding: 4px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lang-picker-menu button {
+  border: none;
+  background: transparent;
+  color: #202124;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.lang-picker-menu button:hover,
+.lang-picker-menu button.active {
+  background: #f1f3f4;
+}
+.lang-picker-mobile { display: none; }
 
 /* Badges */
 .badge {
@@ -602,17 +669,16 @@ a:hover { text-decoration: underline; }
 /* Hamburger for mobile */
 .menu-toggle {
   display: none;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
 }
 @media (max-width: 600px) {
-  .menu-toggle { display: block; }
+  .menu-toggle { display: inline-flex; }
+  .navbar-mobile-controls { display: flex; }
+  .lang-picker-desktop { display: none; }
+  .lang-picker-mobile { display: inline-flex; }
   .navbar-links {
     display: none;
     flex-direction: column;
+    align-items: flex-start;
     position: absolute;
     top: 100%;
     left: 0;
@@ -622,6 +688,8 @@ a:hover { text-decoration: underline; }
     gap: 12px;
   }
   .navbar-links.open { display: flex; }
+  .navbar-end { position: static; }
+  .navbar-inner { position: relative; }
 }
 
 /* Page title */
@@ -776,7 +844,50 @@ a:hover { text-decoration: underline; }
   gap: 2px;
   margin-bottom: 2px;
 }
+.calendar-day-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  max-width: calc(100% - 18px);
+}
 .calendar-day-number { font-size: 12px; font-weight: 600; line-height: 1.2; }
+.calendar-holiday-tag-wrap {
+  position: relative;
+  max-width: 100%;
+}
+button.calendar-holiday-label {
+  appearance: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  font-size: 9px;
+  color: #c5221f;
+  background: #fce8e6;
+  border-radius: 3px;
+  padding: 1px 3px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.calendar-holiday-bubble {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  max-width: 160px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: #202124;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.35;
+  white-space: normal;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
 .calendar-holiday-label {
   font-size: 9px;
   color: #c5221f;
@@ -788,6 +899,15 @@ a:hover { text-decoration: underline; }
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+.calendar-lunar-tag {
+  font-size: 9px;
+  color: #b06000;
+  background: #fef7e0;
+  border-radius: 3px;
+  padding: 1px 3px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 .calendar-day-events {
   display: flex;
@@ -939,8 +1059,13 @@ a:hover { text-decoration: underline; }
 .pdf-viewer-fallback-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
   gap: 10px;
+}
+.pdf-viewer-fallback-or {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 .pdf-viewer-fallback-btn {
   display: inline-block;

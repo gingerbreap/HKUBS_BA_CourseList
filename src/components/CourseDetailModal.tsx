@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { CourseDetailContent } from '../pages/CourseDetail'
+import { useI18n } from '../i18n/context'
 
 interface CourseDetailModalProps {
   courseCode: string
@@ -8,6 +9,8 @@ interface CourseDetailModalProps {
 }
 
 export default function CourseDetailModal({ courseCode, onClose }: CourseDetailModalProps) {
+  const { t } = useI18n()
+
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -30,10 +33,10 @@ export default function CourseDetailModal({ courseCode, onClose }: CourseDetailM
         className="modal-window"
         role="dialog"
         aria-modal="true"
-        aria-label="课程详情"
+        aria-label={t('courseDetail.modalLabel')}
         onClick={e => e.stopPropagation()}
       >
-        <button type="button" className="modal-close" onClick={onClose} aria-label="关闭">
+        <button type="button" className="modal-close" onClick={onClose} aria-label={t('common.close')}>
           ×
         </button>
         <div className="modal-body">

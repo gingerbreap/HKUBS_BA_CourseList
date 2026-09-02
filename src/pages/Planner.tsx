@@ -5,6 +5,7 @@ import PlannerCalendar from '../components/PlannerCalendar'
 import StreamTagBadges from '../components/StreamTagBadges'
 import TeachingPlanUpdateNotice from '../components/TeachingPlanUpdateNotice'
 import WeekdayStrip from '../components/WeekdayStrip'
+import { useI18n } from '../i18n/context'
 import { useCourses, useRequirements } from '../hooks/useCoursesData'
 import { useSelections } from '../hooks/useSelections'
 import { useWishlist } from '../hooks/useWishlist'
@@ -36,6 +37,7 @@ function compareSelections(a: SelectedSection, b: SelectedSection): number {
 }
 
 export default function Planner() {
+  const { t, sectionLabel } = useI18n()
   const { courses, loading } = useCourses()
   const requirements = useRequirements()
   const { selections, toggle, isSelected, getForCourseCode, clear, replace } = useSelections()
@@ -65,12 +67,16 @@ export default function Planner() {
       const existing = getForCourseCode(s.courseCode)
       if (existing) {
         setDuplicateMsg(
-          `「${s.courseCode}」已在规划中（${existing.sectionId}班 · Module ${existing.module}），请先移除后再选其他班别。`,
+          t('planner.duplicateBrowse', {
+            code: s.courseCode,
+            section: existing.sectionId,
+            module: existing.module,
+          }),
         )
       }
     }
     return result
-  }, [toggle, getForCourseCode])
+  }, [toggle, getForCourseCode, t])
 
   const promoteFromWishlist = useCallback((s: SelectedSection) => {
     if (isSelected(s.courseCode, s.module, s.sectionId)) {
@@ -80,13 +86,17 @@ export default function Planner() {
     const existing = getForCourseCode(s.courseCode)
     if (existing) {
       setDuplicateMsg(
-        `「${s.courseCode}」已在规划中（${existing.sectionId}班 · Module ${existing.module}），请先移除后再从备选中选择。`,
+        t('planner.duplicateWishlist', {
+          code: s.courseCode,
+          section: existing.sectionId,
+          module: existing.module,
+        }),
       )
       return
     }
     toggle(s)
     removeWishlist(s)
-  }, [isSelected, getForCourseCode, toggle, removeWishlist])
+  }, [isSelected, getForCourseCode, toggle, removeWishlist, t])
 
   const conflicts = useMemo(() => detectConflicts(selections, courses), [selections, courses])
   const calendarEvents = useMemo(() => buildCalendarEvents(selections, courses), [selections, courses])
@@ -129,16 +139,16 @@ export default function Planner() {
       .find(c => c.courseCode === courseCode && c.module === module)
       ?.sections.find(s => s.sectionId === sectionId)
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center' }}>加载中...</div>
+  if (loading) return <div style={{ padding: 40, textAlign: 'center' }}>{t('common.loading')}</div>
 
   return (
     <div>
-      <h1 className="page-title">我的选课规划</h1>
+      <h1 className="page-title">{t('planner.title')}</h1>
 
       <div className="planner-stats">
         <div className="stat-card">
           <div className="stat-number">{stats.total}</div>
-          <div className="stat-label">已选总数</div>
+          <div className="stat-label">{t('planner.totalSelected')}</div>
         </div>
         <div className="stat-card">
           <div className="stat-number">{stats.core}</div>
@@ -156,10 +166,10 @@ export default function Planner() {
 
       {streamCompletion && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>方向完成度</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{t('planner.streamProgress')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
             <div>
-              <strong>AI 方向：</strong>
+              <strong>{t('planner.streamAi')}</strong>
               <span className={streamCompletion.listA >= 1 ? 'check-icon' : 'cross-icon'}>
                 {streamCompletion.listA >= 1 ? '✓' : '✗'}
               </span> List A ({streamCompletion.listA}/1)
@@ -169,7 +179,7 @@ export default function Planner() {
               </span> List B ({streamCompletion.listB}/1)
             </div>
             <div>
-              <strong>MC 方向：</strong>
+              <strong>{t('planner.streamMc')}</strong>
               <span className={streamCompletion.listC >= 1 ? 'check-icon' : 'cross-icon'}>
                 {streamCompletion.listC >= 1 ? '✓' : '✗'}
               </span> List C ({streamCompletion.listC}/1)
@@ -199,10 +209,10 @@ export default function Planner() {
 
       <div className="tabs">
         <button className={`tab ${tab === 'selected' ? 'active' : ''}`} onClick={() => setTab('selected')}>
-          已选课程 ({selections.length})
+          {t('planner.tabSelected', { count: selections.length })}
         </button>
         <button className={`tab ${tab === 'browse' ? 'active' : ''}`} onClick={() => setTab('browse')}>
-          浏览 & 添加
+          {t('planner.tabBrowse')}
         </button>
       </div>
 
@@ -211,7 +221,7 @@ export default function Planner() {
           <div className="card" style={{ padding: 0 }}>
             {selections.length === 0 ? (
               <div style={{ padding: 24, textAlign: 'center', color: '#5f6368' }}>
-                尚未选择任何课程，点击「浏览 & 添加」开始选课
+                {t('planner.emptySelected')}
               </div>
             ) : (
               <>
@@ -229,7 +239,7 @@ export default function Planner() {
                         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailCode(s.courseCode) } }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontWeight: 600, fontSize: 14 }}>
-                          <span>{s.courseCode} {s.sectionId}班</span>
+                          <span>{s.courseCode} {sectionLabel(s.sectionId)}</span>
                           {sec && <TimeBadge bucket={sec.timeBucket} />}
                           {sec && <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />}
                           <span className={`badge ${s.courseType === 'Core' ? 'badge-core' : s.courseType === 'Capstone' ? 'badge-capstone' : 'badge-elective'}`}>
@@ -238,15 +248,15 @@ export default function Planner() {
                           {course && <StreamTagBadges tags={course.streamTags} />}
                         </div>
                         <div style={{ fontSize: 13, color: '#5f6368' }}>
-                          {s.courseTitle} · 授课教授：{instructorLabel} · Module {s.module}
+                          {s.courseTitle} · {t('common.instructor', { name: instructorLabel })} · {t('common.module', { module: s.module })}
                         </div>
                       </div>
-                      <button className="remove-btn" onClick={() => handleToggle(s)}>移除</button>
+                      <button className="remove-btn" onClick={() => handleToggle(s)}>{t('common.remove')}</button>
                     </div>
                   )
                 })}
                 <div style={{ padding: 12, textAlign: 'right' }}>
-                  <button className="remove-btn" onClick={clear}>清空全部</button>
+                  <button className="remove-btn" onClick={clear}>{t('planner.clearAll')}</button>
                 </div>
               </>
             )}
@@ -255,17 +265,17 @@ export default function Planner() {
           <div className="wishlist-section">
             <div className="wishlist-header">
               <span>
-                备选列表 ({wishlist.length})
-                <span className="wishlist-hint"> · 可拖动排序；「选择」加入正式已选</span>
+                {t('planner.wishlistTitle', { count: wishlist.length })}
+                <span className="wishlist-hint">{t('planner.wishlistHint')}</span>
               </span>
               {wishlist.length > 0 && (
-                <button className="remove-btn" onClick={clearWishlist}>清空备选</button>
+                <button className="remove-btn" onClick={clearWishlist}>{t('planner.clearWishlist')}</button>
               )}
             </div>
             <div className="card" style={{ padding: 0 }}>
               {wishlist.length === 0 ? (
                 <div style={{ padding: 24, textAlign: 'center', color: '#5f6368' }}>
-                  暂无备选课程，在「浏览 & 添加」中点击「加入备选」
+                  {t('planner.emptyWishlist')}
                 </div>
               ) : (
                 wishlist.map((s, index) => {
@@ -294,7 +304,7 @@ export default function Planner() {
                       <div className="wishlist-actions">
                         <span
                           className="drag-handle"
-                          title="拖动排序"
+                          title={t('planner.dragSort')}
                           draggable
                           onDragStart={e => {
                             setDragFrom(index)
@@ -309,7 +319,7 @@ export default function Planner() {
                           className="select-btn"
                           onClick={() => promoteFromWishlist(s)}
                         >
-                          选择
+                          {t('planner.select')}
                         </button>
                       </div>
                       <div
@@ -320,7 +330,7 @@ export default function Planner() {
                         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailCode(s.courseCode) } }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontWeight: 600, fontSize: 14 }}>
-                          <span>{s.courseCode} {s.sectionId}班</span>
+                          <span>{s.courseCode} {sectionLabel(s.sectionId)}</span>
                           {sec && <TimeBadge bucket={sec.timeBucket} />}
                           {sec && <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />}
                           <span className={`badge ${s.courseType === 'Core' ? 'badge-core' : s.courseType === 'Capstone' ? 'badge-capstone' : 'badge-elective'}`}>
@@ -329,10 +339,10 @@ export default function Planner() {
                           {course && <StreamTagBadges tags={course.streamTags} />}
                         </div>
                         <div style={{ fontSize: 13, color: '#5f6368' }}>
-                          {s.courseTitle} · 授课教授：{instructorLabel} · Module {s.module}
+                          {s.courseTitle} · {t('common.instructor', { name: instructorLabel })} · {t('common.module', { module: s.module })}
                         </div>
                       </div>
-                      <button className="remove-btn" onClick={() => removeWishlist(s)}>移除</button>
+                      <button className="remove-btn" onClick={() => removeWishlist(s)}>{t('common.remove')}</button>
                     </div>
                   )
                 })
@@ -378,7 +388,10 @@ export default function Planner() {
                       instructor: instructorLabel,
                     }
                     const duplicateHint = blockedByDuplicate && existingForCode
-                      ? `已选 ${existingForCode.sectionId}班（Module ${existingForCode.module}），请先移除`
+                      ? t('planner.duplicateHint', {
+                          section: existingForCode.sectionId,
+                          module: existingForCode.module,
+                        })
                       : undefined
                     return (
                       <div key={sec.sectionId} className="section-row" style={{ justifyContent: 'space-between' }}>
@@ -390,7 +403,7 @@ export default function Planner() {
                           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailCode(course.courseCode) } }}
                           style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
                         >
-                          <span className="section-id">{sec.sectionId}班</span>
+                          <span className="section-id">{sectionLabel(sec.sectionId)}</span>
                           <TimeBadge bucket={sec.timeBucket} />
                           <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />
                           <span style={{ fontSize: 13 }}>{instructorLabel}</span>
@@ -405,13 +418,13 @@ export default function Planner() {
                             title={duplicateHint}
                             onClick={() => handleToggle(candidate)}
                           >
-                            {sel ? '已选 ✓' : blockedByDuplicate ? '不可选' : '选择'}
+                            {sel ? t('planner.selected') : blockedByDuplicate ? t('planner.blocked') : t('planner.select')}
                           </button>
                           <button
                             className={`alt-btn ${inWishlist ? 'in-wishlist' : ''}`}
                             onClick={() => toggleWishlist(candidate)}
                           >
-                            {inWishlist ? '已备选 ✓' : '加入备选'}
+                            {inWishlist ? t('planner.inWishlist') : t('planner.addWishlist')}
                           </button>
                         </div>
                       </div>

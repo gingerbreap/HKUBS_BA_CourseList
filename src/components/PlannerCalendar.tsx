@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react'
 import IcsExportModal from './IcsExportModal'
 import StudyStatusImportModal from './StudyStatusImportModal'
-import { CALENDAR_END, CALENDAR_START, holidayLabel, isHoliday } from '../data/holidays'
+import { CALENDAR_END, CALENDAR_START, holidayLabelKey, holidayLunarTag } from '../data/holidays'
+import { useI18n } from '../i18n/context'
 import { calendarEventLabel, eventsByDate, type CalendarEvent } from '../utils/calendarEvents'
 import type { Course, SelectedSection } from '../types'
-
-const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
@@ -68,19 +67,56 @@ function buildMonthGrid(year: number, month: number): DayCell[] {
   return cells
 }
 
+function HolidayTag({
+  shortLabel,
+  fullLabel,
+  showBubble,
+  onToggle,
+}: {
+  shortLabel: string
+  fullLabel: string
+  showBubble: boolean
+  onToggle: () => void
+}) {
+  const showFull = fullLabel && fullLabel !== shortLabel
+
+  return (
+    <span className="calendar-holiday-tag-wrap">
+      <button
+        type="button"
+        className="calendar-holiday-label"
+        title={fullLabel || shortLabel}
+        onClick={e => {
+          e.stopPropagation()
+          if (showFull) onToggle()
+        }}
+      >
+        {shortLabel}
+      </button>
+      {showFull && showBubble && (
+        <span className="calendar-holiday-bubble" role="tooltip">
+          {fullLabel}
+        </span>
+      )}
+    </span>
+  )
+}
+
 function EventChip({
   event,
   onCourseClick,
+  sectionLabel,
 }: {
   event: CalendarEvent
   onCourseClick?: (courseCode: string) => void
+  sectionLabel: (sectionId: string) => string
 }) {
   const label = calendarEventLabel(event)
   const timed = event.startTime && event.endTime
   const isFinal = event.sessionType === 'exam' || event.sessionType === 'presentation' || event.sessionType === 'other'
   const title = [
     label,
-    event.sectionId && !isFinal ? `${event.sectionId}班` : '',
+    event.sectionId && !isFinal ? sectionLabel(event.sectionId) : '',
     event.instructor,
     timed ? `${event.startTime}-${event.endTime}` : event.date,
     event.venue,
@@ -115,11 +151,16 @@ export default function PlannerCalendar({
   onImportSelections,
   onCourseClick,
 }: PlannerCalendarProps) {
+  const { t, tList, sectionLabel } = useI18n()
+  const weekdays = tList('calendar.weekdays')
   const [{ year, month }, setView] = useState(defaultMonth)
   const [exportOpen, setExportOpen] = useState(false)
   const [studyStatusOpen, setStudyStatusOpen] = useState(false)
+  const [activeHolidayBubble, setActiveHolidayBubble] = useState<string | null>(null)
   const byDate = useMemo(() => eventsByDate(events), [events])
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month])
+
+  const holidayFullLabel = (labelKey: string) => t(`holidaysFull.${labelKey}`)
 
   const atStart = monthIndex(year, month) <= monthIndex(CALENDAR_START.year, CALENDAR_START.month)
   const atEnd = monthIndex(year, month) >= monthIndex(CALENDAR_END.year, CALENDAR_END.month)
@@ -136,7 +177,7 @@ export default function PlannerCalendar({
     setView(clampMonth(y, m))
   }
 
-  const monthLabel = `${year}年${month + 1}月`
+  const monthLabel = t('calendar.monthLabel', { year, month: month + 1 })
   const monthEventCount = events.filter(e => {
     const [y, m] = e.date.split('-').map(Number)
     return y === year && m === month + 1
@@ -150,11 +191,11 @@ export default function PlannerCalendar({
     <div className="card planner-calendar">
       <div className="calendar-header">
         <div className="calendar-header-text">
-          <div className="calendar-title">选课日历</div>
+          <div className="calendar-title">{t('calendar.title')}</div>
           <div className="calendar-subtitle">
             {events.length > 0
-              ? `共 ${events.length} 项日程 · 本月 ${monthEventCount} 项`
-              : '选择课程后在此查看排课'}
+              ? t('calendar.subtitleCount', { total: events.length, month: monthEventCount })
+              : t('calendar.subtitleEmpty')}
           </div>
         </div>
         <div className="calendar-nav">
@@ -163,24 +204,24 @@ export default function PlannerCalendar({
             className="calendar-export-btn"
             onClick={handleExport}
             disabled={events.length === 0}
-            title={events.length === 0 ? '请先选择课程' : '导出为 ICS 日历文件'}
+            title={events.length === 0 ? t('calendar.exportDisabled') : t('calendar.exportTitle')}
           >
-            导出 ICS
+            {t('calendar.export')}
           </button>
           <button
             type="button"
             className="calendar-export-btn"
             onClick={() => setStudyStatusOpen(true)}
-            title="从 Study Status 粘贴内容导入已选课程"
+            title={t('calendar.importTitle')}
           >
-            导入 Study Status
+            {t('calendar.import')}
           </button>
           <div className="calendar-month-cluster">
-            <button type="button" className="calendar-nav-btn" onClick={prevMonth} disabled={atStart} aria-label="上个月">
+            <button type="button" className="calendar-nav-btn" onClick={prevMonth} disabled={atStart} aria-label={t('calendar.prevMonth')}>
               ‹
             </button>
             <span className="calendar-month-label">{monthLabel}</span>
-            <button type="button" className="calendar-nav-btn" onClick={nextMonth} disabled={atEnd} aria-label="下个月">
+            <button type="button" className="calendar-nav-btn" onClick={nextMonth} disabled={atEnd} aria-label={t('calendar.nextMonth')}>
               ›
             </button>
           </div>
@@ -189,33 +230,35 @@ export default function PlannerCalendar({
 
       <div className="calendar-legend">
         <span className="calendar-legend-item">
-          <span className="calendar-legend-swatch calendar-event--lecture" /> 讲座 (LEC)
+          <span className="calendar-legend-swatch calendar-event--lecture" /> {t('calendar.legendLec')}
         </span>
         <span className="calendar-legend-item">
-          <span className="calendar-legend-swatch calendar-event--tutorial" /> 教程 (TUT)
+          <span className="calendar-legend-swatch calendar-event--tutorial" /> {t('calendar.legendTut')}
         </span>
         <span className="calendar-legend-item">
-          <span className="calendar-legend-swatch calendar-event--exam" /> 期末考试
+          <span className="calendar-legend-swatch calendar-event--exam" /> {t('calendar.legendExam')}
         </span>
         <span className="calendar-legend-item">
-          <span className="calendar-legend-swatch calendar-event--presentation" /> Presentation
+          <span className="calendar-legend-swatch calendar-event--presentation" /> {t('calendar.legendPresentation')}
         </span>
         <span className="calendar-legend-item">
-          <span className="calendar-legend-swatch calendar-legend-swatch--holiday" /> 假日（仅日历显示）
+          <span className="calendar-legend-swatch calendar-legend-swatch--holiday" /> {t('calendar.legendHoliday')}
         </span>
       </div>
 
       <div className="calendar-weekdays">
-        {WEEKDAYS.map(d => (
+        {weekdays.map(d => (
           <div key={d} className="calendar-weekday">{d}</div>
         ))}
       </div>
 
-      <div className="calendar-grid">
+      <div className="calendar-grid" onClick={() => setActiveHolidayBubble(null)}>
         {grid.map(cell => {
           const dayEvents = byDate[cell.dateKey] || []
-          const holiday = isHoliday(cell.dateKey)
-          const label = holidayLabel(cell.dateKey)
+          const holidayKey = holidayLabelKey(cell.dateKey)
+          const label = holidayKey ? t(`holidays.${holidayKey}`) : undefined
+          const fullLabel = holidayKey ? holidayFullLabel(holidayKey) : undefined
+          const lunarTag = holidayLunarTag(cell.dateKey)
 
           return (
             <div
@@ -223,19 +266,35 @@ export default function PlannerCalendar({
               className={[
                 'calendar-day',
                 !cell.inMonth && 'calendar-day--other',
-                holiday && 'calendar-day--holiday',
+                holidayKey && 'calendar-day--holiday',
                 dayEvents.length > 0 && 'calendar-day--has-events',
               ].filter(Boolean).join(' ')}
             >
               <div className="calendar-day-header">
                 <span className="calendar-day-number">{cell.day}</span>
-                {holiday && label && (
-                  <span className="calendar-holiday-label" title={label}>{label}</span>
+                {(label || lunarTag) && (
+                  <div className="calendar-day-tags">
+                    {label && (
+                      <HolidayTag
+                        shortLabel={label}
+                        fullLabel={fullLabel || label}
+                        showBubble={activeHolidayBubble === cell.dateKey}
+                        onToggle={() =>
+                          setActiveHolidayBubble(prev =>
+                            prev === cell.dateKey ? null : cell.dateKey,
+                          )
+                        }
+                      />
+                    )}
+                    {lunarTag && (
+                      <span className="calendar-lunar-tag" title={lunarTag}>{lunarTag}</span>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="calendar-day-events">
                 {dayEvents.map(ev => (
-                  <EventChip key={ev.id} event={ev} onCourseClick={onCourseClick} />
+                  <EventChip key={ev.id} event={ev} onCourseClick={onCourseClick} sectionLabel={sectionLabel} />
                 ))}
               </div>
             </div>

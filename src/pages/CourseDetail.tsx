@@ -4,6 +4,7 @@ import { useCourses } from '../hooks/useCoursesData'
 import WeekdayStrip from '../components/WeekdayStrip'
 import StreamTagBadges from '../components/StreamTagBadges'
 import CourseOutlineViewer from '../components/CourseOutlineViewer'
+import { useI18n } from '../i18n/context'
 import {
   courseInstructors,
   formatSectionInstructors,
@@ -48,6 +49,7 @@ export function CourseDetailContent({
   courseCode: string
   compact?: boolean
 }) {
+  const { t, sectionLabel } = useI18n()
   const { courses, loading } = useCourses()
 
   const matchedCourses = useMemo(
@@ -68,9 +70,9 @@ export function CourseDetailContent({
   const activeInstructor = selectedInstructor ?? instructors[0]?.name ?? null
   const [tutExpandedBySectionKey, setTutExpandedBySectionKey] = useState<Record<string, boolean>>({})
 
-  if (loading) return <div style={{ padding: compact ? 16 : 40, textAlign: 'center' }}>加载中...</div>
+  if (loading) return <div style={{ padding: compact ? 16 : 40, textAlign: 'center' }}>{t('common.loading')}</div>
   if (matchedCourses.length === 0) {
-    return <div style={{ padding: compact ? 16 : 40, textAlign: 'center' }}>未找到课程 {courseCode}</div>
+    return <div style={{ padding: compact ? 16 : 40, textAlign: 'center' }}>{t('courseDetail.notFound', { code: courseCode })}</div>
   }
 
   const sectionsOf = (course: Course): Section[] =>
@@ -110,7 +112,7 @@ export function CourseDetailContent({
 
       {instructors.length > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>Instructor</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>{t('courseDetail.instructor')}</div>
           <div className="tabs">
             {instructors.map(inst => (
               <button
@@ -135,7 +137,7 @@ export function CourseDetailContent({
         const secs = sectionsOf(course)
         return (
           <div key={course.module} style={{ marginBottom: 24 }}>
-            <div className="module-header" style={{ fontSize: 14 }}>Module {course.module}</div>
+            <div className="module-header" style={{ fontSize: 14 }}>{t('common.module', { module: course.module })}</div>
 
             {secs.map(sec => {
               const exam = resolveExam(course, sec)
@@ -145,7 +147,7 @@ export function CourseDetailContent({
               return (
               <div className="card" key={sec.sectionId}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                  <span className="section-id" style={{ fontSize: 16 }}>{sec.sectionId}班</span>
+                  <span className="section-id" style={{ fontSize: 16 }}>{sectionLabel(sec.sectionId)}</span>
                   <TimeBadge bucket={sec.timeBucket} />
                   <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />
                   <span style={{ fontSize: 14, fontWeight: 500 }}>{formatSectionInstructors(sec)}</span>
@@ -155,11 +157,11 @@ export function CourseDetailContent({
                 <table className="session-table">
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>日期</th>
-                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>时间</th>
-                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>地点</th>
-                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>类型</th>
-                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>教授</th>
+                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>{t('courseDetail.date')}</th>
+                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>{t('courseDetail.time')}</th>
+                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>{t('courseDetail.venue')}</th>
+                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>{t('courseDetail.type')}</th>
+                      <th style={{ textAlign: 'left', padding: '4px 8px' }}>{t('courseDetail.professor')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -195,7 +197,9 @@ export function CourseDetailContent({
                                 setTutExpandedBySectionKey(prev => ({ ...prev, [tutKey]: !prev[tutKey] }))
                               }
                             >
-                              {tutExpanded ? `TUT (${tutorialMeetings.length} sessions) (Hide)` : `TUT (${tutorialMeetings.length} sessions) (Show)`}
+                              {tutExpanded
+                                ? t('courseDetail.tutHide', { count: tutorialMeetings.length })
+                                : t('courseDetail.tutShow', { count: tutorialMeetings.length })}
                             </button>
                           </td>
                         </tr>
@@ -227,7 +231,7 @@ export function CourseDetailContent({
 
       {pdfPath && (
         <div style={{ marginTop: 16 }}>
-          <h2 style={{ fontSize: 16, marginBottom: 8 }}>课程大纲</h2>
+          <h2 style={{ fontSize: 16, marginBottom: 8 }}>{t('courseDetail.outline')}</h2>
           <CourseOutlineViewer pdfPath={pdfPath} baseUrl={BASE} compact={compact} />
         </div>
       )}

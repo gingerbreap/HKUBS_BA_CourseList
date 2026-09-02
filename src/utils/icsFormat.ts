@@ -103,10 +103,15 @@ export function applyIcsEventTemplates(
 
 const WEEKDAY_CN = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
-export function formatIcsPreviewWhen(date: string, startTime: string, endTime: string): string {
+export function formatIcsPreviewWhen(
+  date: string,
+  startTime: string,
+  endTime: string,
+  weekdays: string[] = WEEKDAY_CN,
+): string {
   const day = new Date(`${date}T12:00:00`).getDay()
-  if (startTime && endTime) return `${date} ${WEEKDAY_CN[day]}, ${startTime}-${endTime}`
-  return `${date} ${WEEKDAY_CN[day]}`
+  if (startTime && endTime) return `${date} ${weekdays[day]}, ${startTime}-${endTime}`
+  return `${date} ${weekdays[day]}`
 }
 
 function comparePreviewEvents(a: CalendarEvent, b: CalendarEvent): number {

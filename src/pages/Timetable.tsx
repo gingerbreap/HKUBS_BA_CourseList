@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCourses } from '../hooks/useCoursesData'
 import WeekdayStrip from '../components/WeekdayStrip'
 import StreamTagBadges from '../components/StreamTagBadges'
+import { useI18n } from '../i18n/context'
 import { formatSectionInstructors } from '../utils/instructors'
 import { timetableExamLine } from '../utils/exams'
 import type { Course, Section } from '../types'
@@ -17,14 +18,14 @@ function TypeBadge({ type }: { type: string }) {
   return <span className={`badge ${cls}`}>{type}</span>
 }
 
-function summarizeDates(section: Section): string {
+function summarizeDates(section: Section, formatSessionCount: (count: number) => string): string {
   const lectures = section.meetings.filter(m => m.sessionType === 'lecture')
   if (lectures.length === 0) return ''
   const days = lectures.map(m => m.date)
   const first = days[0]
   const last = days[days.length - 1]
   const time = `${lectures[0].startTime}-${lectures[0].endTime}`
-  return `${first} ~ ${last} | ${time} | ${lectures.length}次课`
+  return `${first} ~ ${last} | ${time} | ${formatSessionCount(lectures.length)}`
 }
 
 function TimetableInstructor({ section }: { section: Section }) {
@@ -50,7 +51,11 @@ function TimetableInstructor({ section }: { section: Section }) {
   )
 }
 
-function CourseCard({ course }: { course: Course }) {
+function CourseCard({ course, sectionLabel, formatSessionCount }: {
+  course: Course
+  sectionLabel: (id: string) => string
+  formatSessionCount: (count: number) => string
+}) {
   const navigate = useNavigate()
 
   return (
@@ -67,17 +72,17 @@ function CourseCard({ course }: { course: Course }) {
       </div>
       {course.sections.map(sec => (
         <div className="section-row" key={sec.sectionId}>
-          <span className="section-id">{sec.sectionId}班</span>
+          <span className="section-id">{sectionLabel(sec.sectionId)}</span>
           <TimeBadge bucket={sec.timeBucket} />
           <WeekdayStrip days={sec.meetingDays} title={sec.dayPattern} />
           <TimetableInstructor section={sec} />
-          <span className="section-time">{summarizeDates(sec)}</span>
+          <span className="section-time">{summarizeDates(sec, formatSessionCount)}</span>
         </div>
       ))}
       {course.sections.some(s => s.examOrFinal) ? (
         course.sections.filter(s => s.examOrFinal).map(s => (
           <div key={s.sectionId} style={{ fontSize: 12, color: '#5f6368', paddingTop: 4 }}>
-            📝 {s.sectionId}班 {timetableExamLine(s.examOrFinal!)}
+            📝 {sectionLabel(s.sectionId)} {timetableExamLine(s.examOrFinal!)}
           </div>
         ))
       ) : course.examOrFinal ? (
@@ -90,6 +95,7 @@ function CourseCard({ course }: { course: Course }) {
 }
 
 export default function Timetable() {
+  const { t, sectionLabel } = useI18n()
   const { courses, loading } = useCourses()
 
   const grouped = useMemo(() => {
@@ -100,24 +106,31 @@ export default function Timetable() {
     return map
   }, [courses])
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center' }}>加载中...</div>
+  if (loading) return <div style={{ padding: 40, textAlign: 'center' }}>{t('common.loading')}</div>
 
   const moduleNames: Record<number, string> = {
-    1: 'Module 1 — Sep 5 ~ Oct 21, 2026',
-    2: 'Module 2 — Oct 22 ~ Nov 30, 2026',
-    3: 'Module 3 — Dec 1, 2026 ~ Jan 21, 2027',
-    4: 'Module 4 — Jan 22 ~ Mar 10, 2027',
-    5: 'Module 5 — Mar 18 ~ May 4, 2027',
+    1: t('timetable.module1'),
+    2: t('timetable.module2'),
+    3: t('timetable.module3'),
+    4: t('timetable.module4'),
+    5: t('timetable.module5'),
   }
+
+  const formatSessionCount = (count: number) => t('timetable.sessionCount', { count })
 
   return (
     <div>
-      <h1 className="page-title">模块时间表</h1>
+      <h1 className="page-title">{t('timetable.title')}</h1>
       {[1, 2, 3, 4, 5].map(mod => (
         <div key={mod}>
           <div className="module-header">{moduleNames[mod]}</div>
           {(grouped[mod] || []).map(c => (
-            <CourseCard key={`${c.courseCode}-${c.module}`} course={c} />
+            <CourseCard
+              key={`${c.courseCode}-${c.module}`}
+              course={c}
+              sectionLabel={sectionLabel}
+              formatSessionCount={formatSessionCount}
+            />
           ))}
         </div>
       ))}

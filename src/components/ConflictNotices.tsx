@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
 import { usePersistentDismiss } from '../hooks/usePersistentDismiss'
+import { formatSectionText, formatSectionWithTypeText, useI18n } from '../i18n/context'
 import {
   formatConflictWhen,
-  formatCourseSection,
-  formatCourseSectionWithType,
   tutorialConflictFingerprint,
   type GroupedConflicts,
   type PairConflict,
@@ -17,9 +16,10 @@ interface ConflictNoticesProps {
 }
 
 function LectureLine({ pair, count }: { pair: PairConflict; count: number }) {
+  const { t } = useI18n()
   return (
     <li>
-      {formatCourseSection(pair.a)} - {formatCourseSection(pair.b)} ｜{count} 次冲突
+      {formatSectionText(t, pair.a.courseCode, pair.a.sectionId)} - {formatSectionText(t, pair.b.courseCode, pair.b.sectionId)} ｜{t('conflicts.overlapCount', { count })}
     </li>
   )
 }
@@ -35,17 +35,19 @@ function OccurrenceLine({
   startTime: string
   endTime: string
 }) {
+  const { t } = useI18n()
   return (
     <li>
-      {formatCourseSection(pair.a)} - {formatCourseSection(pair.b)} | {date} {startTime}-{endTime}
+      {formatSectionText(t, pair.a.courseCode, pair.a.sectionId)} - {formatSectionText(t, pair.b.courseCode, pair.b.sectionId)} | {date} {startTime}-{endTime}
     </li>
   )
 }
 
 function TutorialLine({ pair, occurrenceIndex }: { pair: PairConflict; occurrenceIndex: number }) {
+  const { t } = useI18n()
   const occurrence = pair.tutorialOverlaps[occurrenceIndex]
-  const aText = formatCourseSectionWithType(pair.a, occurrence.aSessionType)
-  const bText = formatCourseSectionWithType(pair.b, occurrence.bSessionType)
+  const aText = formatSectionWithTypeText(t, pair.a.courseCode, pair.a.sectionId, occurrence.aSessionType)
+  const bText = formatSectionWithTypeText(t, pair.b.courseCode, pair.b.sectionId, occurrence.bSessionType)
   return (
     <li>
       {occurrence.aSessionType === 'lecture' ? <strong>{aText}</strong> : aText}
@@ -58,6 +60,7 @@ function TutorialLine({ pair, occurrenceIndex }: { pair: PairConflict; occurrenc
 }
 
 export default function ConflictNotices({ conflicts }: ConflictNoticesProps) {
+  const { t } = useI18n()
   const [expanded, setExpanded] = useState(false)
   const fingerprint = useMemo(
     () => tutorialConflictFingerprint(conflicts.tutorial),
@@ -88,7 +91,7 @@ export default function ConflictNotices({ conflicts }: ConflictNoticesProps) {
       {conflicts.severeLecture.length > 0 && (
         <div className="conflict-alert conflict-error">
           <div className="conflict-alert-header">
-            以下课程有严重 Lecture 冲突，该冲突会严重影响出勤率，会导致其中一门或多门无法通过，请调整：
+            {t('conflicts.severeHeader')}
           </div>
           <ul className="conflict-alert-list">
             {conflicts.severeLecture.map(pair => (
@@ -105,7 +108,7 @@ export default function ConflictNotices({ conflicts }: ConflictNoticesProps) {
       {conflicts.lecture.length > 0 && (
         <div className="conflict-alert conflict-error">
           <div className="conflict-alert-header">
-            以下课程有 Lecture 冲突，该冲突为会影响出勤率的冲突，请调整：
+            {t('conflicts.lectureHeader')}
           </div>
           <ul className="conflict-alert-list">
             {conflicts.lecture.flatMap(pair =>
@@ -126,10 +129,10 @@ export default function ConflictNotices({ conflicts }: ConflictNoticesProps) {
       {showTutorial && (
         <div className="conflict-alert conflict-warning">
           <button type="button" className="notice-dismiss-btn" onClick={dismiss}>
-            我知道了
+            {t('common.dismiss')}
           </button>
           <div className="conflict-alert-header">
-            以下课程有时间冲突，其中有 Tutorial 冲突，这类冲突一般情况下不会影响出勤率，可按需调整或保持现状：
+            {t('conflicts.tutorialHeader')}
           </div>
           <ul
             className={`conflict-alert-list${collapsible && !expanded ? ' conflict-alert-list--collapsed' : ''}`}
@@ -148,7 +151,7 @@ export default function ConflictNotices({ conflicts }: ConflictNoticesProps) {
               className="conflict-alert-toggle"
               onClick={() => setExpanded(v => !v)}
             >
-              {expanded ? '折叠冲突列表' : '展开查看所有冲突'}
+              {expanded ? t('conflicts.collapse') : t('conflicts.expand')}
               <svg
                 className="conflict-alert-toggle-icon"
                 viewBox="0 0 12 12"

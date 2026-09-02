@@ -1,11 +1,13 @@
 import { teachingPlanUpdates } from '../data/teachingPlanUpdates'
 import { usePersistentDismiss } from '../hooks/usePersistentDismiss'
+import { useI18n } from '../i18n/context'
 
 const DISMISS_KEY = 'msba-dismiss-teaching-plan-notice'
 const DISMISS_EVENT = 'msba:dismiss-teaching-plan-notice'
 const NOTICE_VERSION = teachingPlanUpdates.map(update => update.courseCode).join('+')
 
 export default function TeachingPlanUpdateNotice() {
+  const { t } = useI18n()
   const { dismissed, dismiss } = usePersistentDismiss(DISMISS_KEY, NOTICE_VERSION, DISMISS_EVENT)
 
   if (dismissed) return null
@@ -13,24 +15,23 @@ export default function TeachingPlanUpdateNotice() {
   return (
     <div className="teaching-plan-notice">
       <button type="button" className="notice-dismiss-btn" onClick={dismiss}>
-        我知道了
+        {t('common.dismiss')}
       </button>
       <div className="teaching-plan-notice-title">
-        Teaching Plan 更新已同步
+        {t('teachingPlan.title')}
       </div>
       <div className="teaching-plan-notice-text">
-        <code>MSBA7015</code> 与 <code>MSBA7037</code> 的上课安排已按最新 Teaching Plan 更新，
-        你先前看到的时间冲突与日历内容可能会与旧版本不同。
+        {t('teachingPlan.body', { code1: 'MSBA7015', code2: 'MSBA7037' })}
       </div>
 
       <div className="teaching-plan-table-wrap">
         <table className="teaching-plan-table">
           <thead>
             <tr>
-              <th>课程</th>
-              <th>项目</th>
-              <th>历史值</th>
-              <th>更新后</th>
+              <th>{t('teachingPlan.colCourse')}</th>
+              <th>{t('teachingPlan.colField')}</th>
+              <th>{t('teachingPlan.colOld')}</th>
+              <th>{t('teachingPlan.colNew')}</th>
             </tr>
           </thead>
           <tbody>
