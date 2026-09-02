@@ -22,7 +22,7 @@ function itemKey(s: SelectedSection): string {
 export default function Planner() {
   const { courses, loading } = useCourses()
   const requirements = useRequirements()
-  const { selections, toggle, isSelected, getForCourseCode, clear } = useSelections()
+  const { selections, toggle, isSelected, getForCourseCode, clear, replace } = useSelections()
   const {
     wishlist,
     toggle: toggleWishlist,
@@ -169,7 +169,11 @@ export default function Planner() {
         <div className="planner-toast" role="status">{duplicateMsg}</div>
       )}
 
-      <PlannerCalendar events={calendarEvents} />
+      <PlannerCalendar
+        events={calendarEvents}
+        courses={courses}
+        onImportSelections={replace}
+      />
 
       <div className="tabs">
         <button className={`tab ${tab === 'selected' ? 'active' : ''}`} onClick={() => setTab('selected')}>

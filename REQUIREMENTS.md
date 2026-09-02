@@ -37,6 +37,7 @@
   - 弹窗内容复用课程详情页（班别、LEC/TUT、大纲 PDF 等）
   - 弹窗宽、高均不超过视口的 90%
   - 右上角关闭 X；点击 X 或遮罩任意位置关闭；支持 Escape；打开时锁定背景滚动
+- **Study Status 导入**：日历区「导入 Study Status」按钮打开粘贴弹窗；仅解析 `Study Status` / `Study Plan` 标题之后、`Summary` 之前且状态为 `Registered` 的课程记录。按课程代码、Module、Class 匹配 2026-27 课程数据后，导入结果覆盖当前已选课程；未匹配或重复课号会在导入前提示。
 - 模块时间表点击课程仍走 `/course/:courseCode` 路由。
 
 ### 3.3 课程详情（Course Detail）

@@ -54,5 +54,10 @@ export function useSelections() {
 
   const clear = useCallback(() => setSelections([]), [])
 
-  return { selections, toggle, isSelected, getForCourseCode, clear }
+  /** Replace the plan after a successful import from HKU Business School CES. */
+  const replace = useCallback((nextSelections: SelectedSection[]) => {
+    setSelections(nextSelections)
+  }, [])
+
+  return { selections, toggle, isSelected, getForCourseCode, clear, replace }
 }
