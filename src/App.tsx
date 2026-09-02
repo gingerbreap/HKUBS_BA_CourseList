@@ -1,13 +1,24 @@
 import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Timetable from './pages/Timetable'
 import Planner from './pages/Planner'
 import CourseDetail from './pages/CourseDetail'
 import Requirements from './pages/Requirements'
+import { trackPageView } from './utils/analytics'
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
+  const isInitialPageView = useRef(true)
+
+  useEffect(() => {
+    const path = `${location.pathname}${location.search}`
+    if (isInitialPageView.current) {
+      isInitialPageView.current = false
+      return
+    }
+    trackPageView(path)
+  }, [location])
 
   return (
     <>
