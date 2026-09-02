@@ -4,9 +4,26 @@ export function sectionInstructorNames(section: Section): string[] {
   return section.instructors.map(i => i.name)
 }
 
-/** Display label for a class, e.g. "Prof. A (First 5 lectures) / Prof. B (Last 5 lectures)". */
+const FIRST_LECTURES_NOTE = /^First \d+ lectures$/i
+const LAST_LECTURES_NOTE = /^Last \d+ lectures$/i
+
+/** True when instructors split the class (e.g. First 5 / Last 5 lectures). */
+function hasComplementaryLectureNotes(instructors: Instructor[]): boolean {
+  if (instructors.length < 2) return false
+  const notes = instructors.map(i => i.note)
+  if (!notes.every((n): n is string => Boolean(n))) return false
+  return notes.some(n => FIRST_LECTURES_NOTE.test(n)) && notes.some(n => LAST_LECTURES_NOTE.test(n))
+}
+
+/** Compact header label, e.g. "Prof. A & Prof. B (Last 5 lectures)" for split classes. */
 export function formatSectionInstructors(section: Section): string {
-  return section.instructors
+  const { instructors } = section
+  if (hasComplementaryLectureNotes(instructors)) {
+    const names = instructors.map(i => i.name).join(' & ')
+    const lastNote = instructors[instructors.length - 1].note
+    return lastNote ? `${names} (${lastNote})` : names
+  }
+  return instructors
     .map(i => (i.note ? `${i.name} (${i.note})` : i.name))
     .join(' / ')
 }

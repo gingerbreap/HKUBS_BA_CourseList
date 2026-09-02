@@ -15,6 +15,7 @@ export interface CalendarEvent {
   instructor: string
   venue: string
   sessionType: CalendarSessionType
+  module: number
   examKind?: ExamKind
 }
 
@@ -44,6 +45,7 @@ export function buildCalendarEvents(
         instructor: names.length ? names.join(' / ') : fallbackInstructor,
         venue: meeting.venue,
         sessionType: meeting.sessionType,
+        module: course.module,
       })
     }
 
@@ -61,6 +63,7 @@ export function buildCalendarEvents(
         instructor: '',
         venue: exam.venue || '',
         sessionType,
+        module: course.module,
         examKind: exam.kind,
       })
     }
@@ -77,6 +80,20 @@ export function eventsByDate(events: CalendarEvent[]): Record<string, CalendarEv
     ;(map[ev.date] ||= []).push(ev)
   }
   return map
+}
+
+export function filterEventsForIcsExport(
+  events: CalendarEvent[],
+  modules: Set<number>,
+  includeLecture: boolean,
+  includeTutorial: boolean,
+): CalendarEvent[] {
+  return events.filter(ev => {
+    if (!modules.has(ev.module)) return false
+    if (ev.sessionType === 'lecture') return includeLecture
+    if (ev.sessionType === 'tutorial') return includeTutorial
+    return true
+  })
 }
 
 export function calendarEventLabel(event: CalendarEvent): string {

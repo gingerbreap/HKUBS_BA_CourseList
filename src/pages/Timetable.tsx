@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { useCourses } from '../hooks/useCoursesData'
 import WeekdayStrip from '../components/WeekdayStrip'
 import { formatSectionInstructors } from '../utils/instructors'
-import type { Course, Section } from '../types'
+import type { Course, ExamOrFinal, Section } from '../types'
+
+/** Timetable-only: shorten "Final Presentation" so the exam line fits the card. */
+function timetableExamRaw(exam: ExamOrFinal): string {
+  if (exam.kind === 'presentation') {
+    return exam.raw.replace(/\bFinal Presentation\b/g, 'FINAL PRE')
+  }
+  return exam.raw
+}
 
 function TimeBadge({ bucket }: { bucket: string }) {
   const cls = bucket === 'AM' ? 'badge-am' : bucket === 'PM' ? 'badge-pm' : 'badge-nt'
@@ -52,12 +60,12 @@ function CourseCard({ course }: { course: Course }) {
       {course.sections.some(s => s.examOrFinal) ? (
         course.sections.filter(s => s.examOrFinal).map(s => (
           <div key={s.sectionId} style={{ fontSize: 12, color: '#5f6368', paddingTop: 4 }}>
-            📝 {s.sectionId}班 {s.examOrFinal!.raw}
+            📝 {s.sectionId}班 {timetableExamRaw(s.examOrFinal!)}
           </div>
         ))
       ) : course.examOrFinal ? (
         <div style={{ fontSize: 12, color: '#5f6368', paddingTop: 4 }}>
-          📝 {course.examOrFinal.raw}
+          📝 {timetableExamRaw(course.examOrFinal)}
         </div>
       ) : null}
     </div>

@@ -4,17 +4,22 @@ export function resolveExam(course: Course, section?: Section): ExamOrFinal | nu
   return section?.examOrFinal ?? course.examOrFinal ?? null
 }
 
-export function examEventTitle(courseCode: string, kind: ExamKind): string {
+/** ICS / session-row type label: Final Exam, Final Presentation, etc. */
+export function examKindTypeLabel(kind: ExamKind): string {
   switch (kind) {
     case 'exam':
-      return `${courseCode} Final Exam`
+      return 'Final Exam'
     case 'presentation':
-      return `${courseCode} Final Presentation`
+      return 'Final Presentation'
     case 'midterm':
-      return `${courseCode} Mid-term Examination`
+      return 'Mid-term Examination'
     default:
-      return `${courseCode} Final`
+      return 'Final'
   }
+}
+
+export function examEventTitle(courseCode: string, kind: ExamKind): string {
+  return `${courseCode} ${examKindTypeLabel(kind)}`
 }
 
 export function examSessionType(kind: ExamKind): 'exam' | 'presentation' | 'other' {

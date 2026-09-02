@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import IcsExportModal from './IcsExportModal'
 import StudyStatusImportModal from './StudyStatusImportModal'
-import TeachingPlanUpdateNotice from './TeachingPlanUpdateNotice'
 import { CALENDAR_END, CALENDAR_START, holidayLabel, isHoliday } from '../data/holidays'
 import { calendarEventLabel, eventsByDate, type CalendarEvent } from '../utils/calendarEvents'
 import type { Course, SelectedSection } from '../types'
@@ -69,7 +68,13 @@ function buildMonthGrid(year: number, month: number): DayCell[] {
   return cells
 }
 
-function EventChip({ event }: { event: CalendarEvent }) {
+function EventChip({
+  event,
+  onCourseClick,
+}: {
+  event: CalendarEvent
+  onCourseClick?: (courseCode: string) => void
+}) {
   const label = calendarEventLabel(event)
   const timed = event.startTime && event.endTime
   const isFinal = event.sessionType === 'exam' || event.sessionType === 'presentation' || event.sessionType === 'other'
@@ -82,13 +87,18 @@ function EventChip({ event }: { event: CalendarEvent }) {
   ].filter(Boolean).join(' · ')
 
   return (
-    <div className={`calendar-event calendar-event--${event.sessionType}`} title={title}>
+    <button
+      type="button"
+      className={`calendar-event calendar-event--${event.sessionType}`}
+      title={title}
+      onClick={() => onCourseClick?.(event.courseCode)}
+    >
       <span className="calendar-event-code">{label}</span>
       {timed && <span className="calendar-event-time">{event.startTime}-{event.endTime}</span>}
       {!isFinal && event.instructor && (
         <span className="calendar-event-instructor">{event.instructor}</span>
       )}
-    </div>
+    </button>
   )
 }
 
@@ -96,12 +106,14 @@ interface PlannerCalendarProps {
   events: CalendarEvent[]
   courses: Course[]
   onImportSelections: (selections: SelectedSection[]) => void
+  onCourseClick?: (courseCode: string) => void
 }
 
 export default function PlannerCalendar({
   events,
   courses,
   onImportSelections,
+  onCourseClick,
 }: PlannerCalendarProps) {
   const [{ year, month }, setView] = useState(defaultMonth)
   const [exportOpen, setExportOpen] = useState(false)
@@ -136,10 +148,8 @@ export default function PlannerCalendar({
 
   return (
     <div className="card planner-calendar">
-      <TeachingPlanUpdateNotice compact />
-
       <div className="calendar-header">
-        <div>
+        <div className="calendar-header-text">
           <div className="calendar-title">选课日历</div>
           <div className="calendar-subtitle">
             {events.length > 0
@@ -165,13 +175,15 @@ export default function PlannerCalendar({
           >
             导入 Study Status
           </button>
-          <button type="button" className="calendar-nav-btn" onClick={prevMonth} disabled={atStart} aria-label="上个月">
-            ‹
-          </button>
-          <span className="calendar-month-label">{monthLabel}</span>
-          <button type="button" className="calendar-nav-btn" onClick={nextMonth} disabled={atEnd} aria-label="下个月">
-            ›
-          </button>
+          <div className="calendar-month-cluster">
+            <button type="button" className="calendar-nav-btn" onClick={prevMonth} disabled={atStart} aria-label="上个月">
+              ‹
+            </button>
+            <span className="calendar-month-label">{monthLabel}</span>
+            <button type="button" className="calendar-nav-btn" onClick={nextMonth} disabled={atEnd} aria-label="下个月">
+              ›
+            </button>
+          </div>
         </div>
       </div>
 
@@ -223,7 +235,7 @@ export default function PlannerCalendar({
               </div>
               <div className="calendar-day-events">
                 {dayEvents.map(ev => (
-                  <EventChip key={ev.id} event={ev} />
+                  <EventChip key={ev.id} event={ev} onCourseClick={onCourseClick} />
                 ))}
               </div>
             </div>

@@ -1,24 +1,96 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { CalendarEvent } from '../utils/calendarEvents'
+import { filterEventsForIcsExport, type CalendarEvent } from '../utils/calendarEvents'
 import {
   applyIcsTemplate,
+  CHINESE_ICS_DESCRIPTION_TEMPLATE,
+  CHINESE_ICS_FINAL_DESCRIPTION_TEMPLATE,
   DEFAULT_ICS_TEMPLATES,
+  formatIcsPreviewWhen,
   ICS_PLACEHOLDERS,
-  ICS_PREVIEW_EVENT,
   loadIcsTemplates,
+  resolveIcsFinalsPreviewEvent,
+  resolveIcsPreviewEvent,
   saveIcsTemplates,
   type IcsFormatTemplates,
 } from '../utils/icsFormat'
 import { buildIcsContent, downloadIcs } from '../utils/exportIcs'
+
+const MODULES = [1, 2, 3, 4, 5] as const
+
+type IcsFormatTab = 'class' | 'final'
 
 interface IcsExportModalProps {
   events: CalendarEvent[]
   onClose: () => void
 }
 
+function chipTitle(summary: string): string {
+  const idx = summary.indexOf(':')
+  if (idx === -1) return summary
+  const rest = summary.slice(idx + 1).trim()
+  return `${summary.slice(0, idx + 1)}\n${rest}`
+}
+
+function PreviewPanels({
+  event,
+  summary,
+  description,
+}: {
+  event: CalendarEvent | null
+  summary: string
+  description: string
+}) {
+  if (!event) {
+    return (
+      <div className="ics-export-preview-panels ics-export-preview-empty">
+        当前选择下没有可预览的事件
+      </div>
+    )
+  }
+
+  const when = formatIcsPreviewWhen(event.date, event.startTime, event.endTime)
+
+  return (
+    <div className="ics-export-preview-panels">
+      <div className="ics-preview-chip" aria-label="日历格子预览">
+        <div className="ics-preview-chip-title">{chipTitle(summary)}</div>
+        {event.startTime && event.endTime && (
+          <div className="ics-preview-chip-meta">
+            {event.startTime}-{event.endTime}
+          </div>
+        )}
+        {event.venue && (
+          <div className="ics-preview-chip-meta">{event.venue}</div>
+        )}
+      </div>
+
+      <div className="ics-preview-detail" aria-label="点击后详情预览">
+        <div className="ics-preview-detail-title">{summary}</div>
+        <div className="ics-preview-detail-when">{when}</div>
+        {event.venue && (
+          <div className="ics-preview-detail-row">
+            <span className="ics-preview-detail-icon" aria-hidden="true">📍</span>
+            <span className="ics-preview-detail-text">{event.venue}</span>
+          </div>
+        )}
+        {description && (
+          <div className="ics-preview-detail-row">
+            <span className="ics-preview-detail-icon" aria-hidden="true">📝</span>
+            <pre className="ics-preview-detail-desc">{description}</pre>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function IcsExportModal({ events, onClose }: IcsExportModalProps) {
   const [templates, setTemplates] = useState<IcsFormatTemplates>(loadIcsTemplates)
+  const [modules, setModules] = useState<Set<number>>(() => new Set(MODULES))
+  const [includeLecture, setIncludeLecture] = useState(true)
+  const [includeTutorial, setIncludeTutorial] = useState(true)
+  const [activeTab, setActiveTab] = useState<IcsFormatTab>('class')
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -36,22 +108,76 @@ export default function IcsExportModal({ events, onClose }: IcsExportModalProps)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const previewSummary = useMemo(
-    () => applyIcsTemplate(templates.summary, ICS_PREVIEW_EVENT),
-    [templates.summary],
+  const allModulesSelected = MODULES.every(m => modules.has(m))
+  const noModuleSelected = modules.size === 0
+  const noSessionSelected = !includeLecture && !includeTutorial
+  const canExport = !noModuleSelected && !noSessionSelected
+
+  const classPreviewEvent = useMemo(
+    () => resolveIcsPreviewEvent(events, modules, includeLecture, includeTutorial),
+    [events, modules, includeLecture, includeTutorial],
   )
-  const previewDescription = useMemo(
-    () => applyIcsTemplate(templates.description, ICS_PREVIEW_EVENT),
-    [templates.description],
+  const finalPreviewEvent = useMemo(
+    () => resolveIcsFinalsPreviewEvent(events, modules, includeLecture, includeTutorial),
+    [events, modules, includeLecture, includeTutorial],
   )
+
+  const previewEvent = activeTab === 'class' ? classPreviewEvent : finalPreviewEvent
+  const activeSummary = activeTab === 'class' ? templates.summary : templates.finalSummary
+  const activeDescription = activeTab === 'class' ? templates.description : templates.finalDescription
+  const previewSummary = previewEvent ? applyIcsTemplate(activeSummary, previewEvent) : ''
+  const previewDescription = previewEvent ? applyIcsTemplate(activeDescription, previewEvent) : ''
+
+  const toggleModule = (mod: number) => {
+    setModules(prev => {
+      const next = new Set(prev)
+      if (next.has(mod)) next.delete(mod)
+      else next.add(mod)
+      return next
+    })
+  }
+
+  const toggleAllModules = () => {
+    setModules(allModulesSelected ? new Set() : new Set(MODULES))
+  }
 
   const handleReset = () => {
     setTemplates({ ...DEFAULT_ICS_TEMPLATES })
   }
 
+  const applyChineseTemplate = () => {
+    setTemplates(t =>
+      activeTab === 'class'
+        ? { ...t, description: CHINESE_ICS_DESCRIPTION_TEMPLATE }
+        : { ...t, finalDescription: CHINESE_ICS_FINAL_DESCRIPTION_TEMPLATE },
+    )
+  }
+
+  const applyEnglishTemplate = () => {
+    setTemplates(t =>
+      activeTab === 'class'
+        ? { ...t, description: DEFAULT_ICS_TEMPLATES.description }
+        : { ...t, finalDescription: DEFAULT_ICS_TEMPLATES.finalDescription },
+    )
+  }
+
+  const handleSummaryChange = (value: string) => {
+    setTemplates(t =>
+      activeTab === 'class' ? { ...t, summary: value } : { ...t, finalSummary: value },
+    )
+  }
+
+  const handleDescriptionChange = (value: string) => {
+    setTemplates(t =>
+      activeTab === 'class' ? { ...t, description: value } : { ...t, finalDescription: value },
+    )
+  }
+
   const handleExport = () => {
+    if (!canExport) return
     saveIcsTemplates(templates)
-    const content = buildIcsContent(events, templates)
+    const filtered = filterEventsForIcsExport(events, modules, includeLecture, includeTutorial)
+    const content = buildIcsContent(filtered, templates)
     downloadIcs(content, 'hkubs-ba-planner.ics')
     onClose()
   }
@@ -70,34 +196,63 @@ export default function IcsExportModal({ events, onClose }: IcsExportModalProps)
         </button>
 
         <div className="modal-body ics-export-body">
-          <h2 id="ics-export-title" className="ics-export-title">自定义导出课程事件格式</h2>
-          <p className="ics-export-intro">
-            你可以使用下列参数自定义导出的事件格式，以满足自己的需求！
+          <h2 id="ics-export-title" className="ics-export-title">导出 .ics 格式日历文件</h2>
+
+          <h2 className="ics-export-h2">导出事件选择</h2>
+
+          <h3 className="ics-export-h3">现在想要导出哪些 Module 的课？</h3>
+          <div className="ics-export-checks" role="group" aria-label="选择 Module">
+            {MODULES.map(mod => (
+              <label key={mod} className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={modules.has(mod)}
+                  onChange={() => toggleModule(mod)}
+                />
+                M{mod}
+              </label>
+            ))}
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={allModulesSelected}
+                onChange={toggleAllModules}
+              />
+              一键全选/全不选
+            </label>
+          </div>
+          {noModuleSelected && (
+            <div className="ics-export-required">* 至少选择一项</div>
+          )}
+
+          <h3 className="ics-export-h3">需要导出什么课？</h3>
+          <div className="ics-export-checks" role="group" aria-label="选择课程类型">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={includeLecture}
+                onChange={() => setIncludeLecture(v => !v)}
+              />
+              Lecture
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={includeTutorial}
+                onChange={() => setIncludeTutorial(v => !v)}
+              />
+              Tutorial
+            </label>
+          </div>
+          {noSessionSelected && (
+            <div className="ics-export-required">* 至少选择一项</div>
+          )}
+
+          <h2 className="ics-export-h2">自定义事件格式</h2>
+          <p className="ics-export-desc">
+            你可以自由使用下表中列出的参数自定义日历中的事件呈现方式，以满足自己的需求！
           </p>
 
-          <div className="ics-export-form">
-            <label className="ics-export-label" htmlFor="ics-summary">Summary：</label>
-            <input
-              id="ics-summary"
-              type="text"
-              className="ics-export-input"
-              value={templates.summary}
-              onChange={e => setTemplates(t => ({ ...t, summary: e.target.value }))}
-              spellCheck={false}
-            />
-
-            <label className="ics-export-label" htmlFor="ics-description">Description：</label>
-            <textarea
-              id="ics-description"
-              className="ics-export-textarea"
-              rows={5}
-              value={templates.description}
-              onChange={e => setTemplates(t => ({ ...t, description: e.target.value }))}
-              spellCheck={false}
-            />
-          </div>
-
-          <div className="ics-export-hint">可用参数：</div>
           <table className="ics-export-table">
             <thead>
               <tr>
@@ -108,8 +263,15 @@ export default function IcsExportModal({ events, onClose }: IcsExportModalProps)
             </thead>
             <tbody>
               {ICS_PLACEHOLDERS.map(row => (
-                <tr key={row.key}>
-                  <td><code>{row.key}</code></td>
+                <tr key={row.keys.join('/')}>
+                  <td>
+                    {row.keys.map((key, index) => (
+                      <span key={key}>
+                        {index > 0 ? ' / ' : null}
+                        <code>{key}</code>
+                      </span>
+                    ))}
+                  </td>
                   <td>{row.label}</td>
                   <td>{row.example}</td>
                 </tr>
@@ -118,25 +280,87 @@ export default function IcsExportModal({ events, onClose }: IcsExportModalProps)
           </table>
 
           <p className="ics-export-location-note">
-            教室信息会始终写入 ICS 的 <strong>LOCATION</strong> 字段（与 @location 参数一致）。
+            注：教室信息将会作为地点信息默认写入事件。
           </p>
 
-          <div className="ics-export-preview-title">预览</div>
-          <div className="ics-export-preview">
-            <div className="ics-export-preview-block">
-              <div><strong>Summary:</strong> {previewSummary}</div>
-              <div className="ics-export-preview-desc">
-                <strong>Description:</strong>
-                <pre>{previewDescription}</pre>
+          <div className="tabs ics-export-tabs" role="tablist" aria-label="事件格式分类">
+            <button
+              type="button"
+              role="tab"
+              id="ics-tab-class"
+              className={`tab ${activeTab === 'class' ? 'active' : ''}`}
+              aria-selected={activeTab === 'class'}
+              aria-controls="ics-tab-panel"
+              onClick={() => setActiveTab('class')}
+            >
+              授课信息 (LEC/TUT)
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="ics-tab-final"
+              className={`tab ${activeTab === 'final' ? 'active' : ''}`}
+              aria-selected={activeTab === 'final'}
+              aria-controls="ics-tab-panel"
+              onClick={() => setActiveTab('final')}
+            >
+              期末考核信息
+            </button>
+          </div>
+
+          <div
+            id="ics-tab-panel"
+            role="tabpanel"
+            aria-labelledby={activeTab === 'class' ? 'ics-tab-class' : 'ics-tab-final'}
+          >
+            <h3 className="ics-export-h3">事件标题</h3>
+            <input
+              id="ics-summary"
+              type="text"
+              className="ics-export-input"
+              value={activeSummary}
+              onChange={e => handleSummaryChange(e.target.value)}
+              spellCheck={false}
+            />
+
+            <div className="ics-export-h3-row">
+              <h3 className="ics-export-h3">事件描述</h3>
+              <div className="ics-export-template-links">
+                <button type="button" className="ics-export-link-btn" onClick={applyChineseTemplate}>
+                  使用中文模板
+                </button>
+                <button type="button" className="ics-export-link-btn" onClick={applyEnglishTemplate}>
+                  使用英文模板（默认）
+                </button>
               </div>
             </div>
+            <textarea
+              id="ics-description"
+              className="ics-export-textarea"
+              rows={5}
+              value={activeDescription}
+              onChange={e => handleDescriptionChange(e.target.value)}
+              spellCheck={false}
+            />
+
+            <h3 className="ics-export-h3">预览</h3>
+            <PreviewPanels
+              event={previewEvent}
+              summary={previewSummary}
+              description={previewDescription}
+            />
           </div>
 
           <div className="ics-export-actions">
             <button type="button" className="alt-btn" onClick={handleReset}>
               恢复默认
             </button>
-            <button type="button" className="select-btn" onClick={handleExport}>
+            <button
+              type="button"
+              className="select-btn"
+              onClick={handleExport}
+              disabled={!canExport}
+            >
               导出
             </button>
           </div>

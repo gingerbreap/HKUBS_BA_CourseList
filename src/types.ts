@@ -65,12 +65,6 @@ export interface SelectedSection {
   instructor: string
 }
 
-export interface Conflict {
-  type: 'error' | 'warning'
-  message: string
-  sections: [SelectedSection, SelectedSection]
-}
-
 export interface StreamList {
   name: string
   minRequired: number
