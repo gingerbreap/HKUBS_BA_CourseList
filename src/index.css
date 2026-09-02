@@ -70,7 +70,32 @@ a:hover { text-decoration: underline; }
 .badge-capstone { background: #fef7e0; color: #e37400; }
 .badge-exam { background: #fce8e6; color: #c5221f; }
 .badge-presentation { background: #e6f4ea; color: #0d652d; }
-.badge-stream { background: #f1f3f4; color: var(--text-secondary); font-size: 10px; margin-left: 4px; }
+.badge-stream {
+  font-size: 10px;
+  margin-left: 4px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.badge-stream--ai-a {
+  background: #e0f2f1;
+  color: #00695c;
+}
+.badge-stream--ai-b {
+  background: #b2dfdb;
+  color: #004d40;
+}
+.badge-stream--mc-c {
+  background: #efebe9;
+  color: #5d4037;
+}
+.badge-stream--mc-d {
+  background: #d7ccc8;
+  color: #4e342e;
+}
+.badge-stream--default {
+  background: #f1f3f4;
+  color: var(--text-secondary);
+}
 
 /* Cards */
 .card {
@@ -101,19 +126,40 @@ a:hover { text-decoration: underline; }
 .course-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .course-code { font-weight: 700; font-size: 14px; color: var(--primary); }
 .course-title { font-size: 14px; color: var(--text); }
-.course-instructor { font-size: 13px; color: var(--text-secondary); }
+.course-instructor {
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex: 1 1 8rem;
+  min-width: 0;
+}
 .course-schedule { font-size: 12px; color: var(--text-secondary); }
 
 .section-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 6px 0;
   border-top: 1px solid var(--border);
   font-size: 13px;
 }
-.section-id { font-weight: 600; min-width: 30px; }
-.section-time { color: var(--text-secondary); flex: 1; }
+.section-row .weekday-strip {
+  margin-right: 6px;
+}
+.section-id { font-weight: 600; min-width: 30px; flex-shrink: 0; }
+.section-time {
+  color: var(--text-secondary);
+  flex: 1 1 12rem;
+  min-width: 12rem;
+  text-align: right;
+  margin-left: auto;
+}
+.course-instructor--split {
+  line-height: 1.45;
+}
+.course-instructor-amp {
+  white-space: normal;
+}
 
 /* Weekly meeting-day indicator (informational only) */
 .weekday-strip {
@@ -475,6 +521,17 @@ a:hover { text-decoration: underline; }
 }
 
 /* Course detail: tutorial fold/expand */
+.session-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.session-table {
+  width: 100%;
+  min-width: 520px;
+  font-size: 13px;
+  border-collapse: collapse;
+}
 .tut-toggle-btn {
   background: none;
   border: 1px solid var(--border);
@@ -864,6 +921,33 @@ a:hover { text-decoration: underline; }
 }
 .modal-body .detail-header h1 { padding-right: 36px; }
 .pdf-viewer--compact { height: min(420px, 45vh); }
+
+.pdf-viewer-fallback {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  margin-top: 16px;
+  background: #f8f9fa;
+  text-align: center;
+}
+.pdf-viewer-fallback-note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+.pdf-viewer-fallback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.pdf-viewer-fallback-btn {
+  display: inline-block;
+  text-decoration: none;
+  padding: 8px 16px;
+  font-size: 13px;
+}
 
 /* ICS export format modal */
 .modal-window.ics-export-modal {

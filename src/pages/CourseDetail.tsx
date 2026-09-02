@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useCourses } from '../hooks/useCoursesData'
 import WeekdayStrip from '../components/WeekdayStrip'
+import StreamTagBadges from '../components/StreamTagBadges'
+import CourseOutlineViewer from '../components/CourseOutlineViewer'
 import {
   courseInstructors,
   formatSectionInstructors,
   meetingInstructorNames,
   sectionHasInstructor,
 } from '../utils/instructors'
-import { examKindTypeLabel, resolveExam } from '../utils/exams'
+import { examSessionRowLabel, resolveExam } from '../utils/exams'
 import type { Course, ExamOrFinal, Section } from '../types'
 
 const BASE = import.meta.env.BASE_URL
@@ -32,7 +34,7 @@ function FinalSessionRow({ exam }: { exam: ExamOrFinal }) {
       <td style={{ padding: '4px 8px' }}>{time}</td>
       <td style={{ padding: '4px 8px' }}>{venue}</td>
       <td style={{ padding: '4px 8px' }}>
-        <span className={`badge ${examBadgeClass(exam)}`}>{examKindTypeLabel(exam.kind)}</span>
+        <span className={`badge ${examBadgeClass(exam)}`}>{examSessionRowLabel(exam.kind)}</span>
       </td>
       <td style={{ padding: '4px 8px', color: 'var(--text-secondary)' }}>-</td>
     </tr>
@@ -102,7 +104,7 @@ export function CourseDetailContent({
           >
             {matchedCourses[0].courseType}
           </span>
-          {matchedCourses[0].streamTags.map(t => <span key={t} className="badge badge-stream">{t}</span>)}
+          <StreamTagBadges tags={matchedCourses[0].streamTags} />
         </div>
       </div>
 
@@ -149,7 +151,8 @@ export function CourseDetailContent({
                   <span style={{ fontSize: 14, fontWeight: 500 }}>{formatSectionInstructors(sec)}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{sec.dayPattern}</span>
                 </div>
-                <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+                <div className="session-table-wrap">
+                <table className="session-table">
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
                       <th style={{ textAlign: 'left', padding: '4px 8px' }}>日期</th>
@@ -214,6 +217,7 @@ export function CourseDetailContent({
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
               )
             })}
@@ -224,11 +228,7 @@ export function CourseDetailContent({
       {pdfPath && (
         <div style={{ marginTop: 16 }}>
           <h2 style={{ fontSize: 16, marginBottom: 8 }}>课程大纲</h2>
-          <iframe
-            className={`pdf-viewer${compact ? ' pdf-viewer--compact' : ''}`}
-            src={`${BASE}${pdfPath}`}
-            title="Course Outline"
-          />
+          <CourseOutlineViewer pdfPath={pdfPath} baseUrl={BASE} compact={compact} />
         </div>
       )}
     </div>

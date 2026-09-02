@@ -4362,12 +4362,12 @@
     ],
     "outlinePdfPath": "courseOutline/M4/MSBA7029-Storytelling-with-data_Class-A-(2026-27).pdf",
     "examOrFinal": {
-      "kind": "other",
+      "kind": "presentation",
       "date": "2027-03-08",
       "startTime": "18:30",
       "endTime": "21:30",
       "venue": "LTA",
-      "raw": "Mar 8, 2027 (Mon), 18:30-21:30, LTA"
+      "raw": "Final Presentation: Mar 8, 2027 (Mon), 18:30-21:30, LTA"
     },
     "sections": [
       {

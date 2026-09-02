@@ -15,13 +15,11 @@ function hasComplementaryLectureNotes(instructors: Instructor[]): boolean {
   return notes.some(n => FIRST_LECTURES_NOTE.test(n)) && notes.some(n => LAST_LECTURES_NOTE.test(n))
 }
 
-/** Compact header label, e.g. "Prof. A & Prof. B (Last 5 lectures)" for split classes. */
+/** Compact header label, e.g. "Prof. A & Prof. B" for split classes. */
 export function formatSectionInstructors(section: Section): string {
   const { instructors } = section
   if (hasComplementaryLectureNotes(instructors)) {
-    const names = instructors.map(i => i.name).join(' & ')
-    const lastNote = instructors[instructors.length - 1].note
-    return lastNote ? `${names} (${lastNote})` : names
+    return instructors.map(i => i.name).join(' & ')
   }
   return instructors
     .map(i => (i.note ? `${i.name} (${i.note})` : i.name))
