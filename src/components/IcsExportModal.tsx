@@ -36,15 +36,22 @@ function PreviewPanels({
   event,
   summary,
   description,
+  tab,
 }: {
   event: CalendarEvent | null
   summary: string
   description: string
+  tab: IcsFormatTab
 }) {
   if (!event) {
+    const subtitle = tab === 'class' ? '无课一身轻！' : '没有 Final 直接弹射起飞！'
     return (
       <div className="ics-export-preview-panels ics-export-preview-empty">
-        当前选择下没有可预览的事件
+        <p className="ics-export-empty-notice">
+          当前选择下没有可预览的事件
+          <br />
+          {subtitle}
+        </p>
       </div>
     )
   }
@@ -111,7 +118,16 @@ export default function IcsExportModal({ events, onClose }: IcsExportModalProps)
   const allModulesSelected = MODULES.every(m => modules.has(m))
   const noModuleSelected = modules.size === 0
   const noSessionSelected = !includeLecture && !includeTutorial
-  const canExport = !noModuleSelected && !noSessionSelected
+  const filtersValid = !noModuleSelected && !noSessionSelected
+
+  const exportableEvents = useMemo(
+    () => (filtersValid
+      ? filterEventsForIcsExport(events, modules, includeLecture, includeTutorial)
+      : []),
+    [events, modules, includeLecture, includeTutorial, filtersValid],
+  )
+  const hasExportableEvents = exportableEvents.length > 0
+  const canExport = filtersValid && hasExportableEvents
 
   const classPreviewEvent = useMemo(
     () => resolveIcsPreviewEvent(events, modules, includeLecture, includeTutorial),
@@ -176,8 +192,7 @@ export default function IcsExportModal({ events, onClose }: IcsExportModalProps)
   const handleExport = () => {
     if (!canExport) return
     saveIcsTemplates(templates)
-    const filtered = filterEventsForIcsExport(events, modules, includeLecture, includeTutorial)
-    const content = buildIcsContent(filtered, templates)
+    const content = buildIcsContent(exportableEvents, templates)
     downloadIcs(content, 'hkubs-ba-planner.ics')
     onClose()
   }
@@ -348,8 +363,17 @@ export default function IcsExportModal({ events, onClose }: IcsExportModalProps)
               event={previewEvent}
               summary={previewSummary}
               description={previewDescription}
+              tab={activeTab}
             />
           </div>
+
+          {filtersValid && !hasExportableEvents && (
+            <p className="ics-export-empty-notice ics-export-empty-notice--export">
+              当前选择下没有可导出的事件
+              <br />
+              在校园外也要好好生活！
+            </p>
+          )}
 
           <div className="ics-export-actions">
             <button type="button" className="alt-btn" onClick={handleReset}>
