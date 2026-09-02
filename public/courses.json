@@ -5000,14 +5000,7 @@
       "MC-AM"
     ],
     "outlinePdfPath": "courseOutline/M5/MSBA7015_Service-Operations-Management-(2026-27).pdf",
-    "examOrFinal": {
-      "kind": "presentation",
-      "date": "2027-05-03",
-      "startTime": "09:30",
-      "endTime": "12:30",
-      "venue": "Classroom ABC, D",
-      "raw": "Final Presentation: May 3, 2027 (Mon), 09:30-12:30, Classroom ABC, D"
-    },
+    "examOrFinal": null,
     "sections": [
       {
         "sectionId": "A",
@@ -5016,82 +5009,40 @@
             "name": "Prof. Huiyin OUYANG"
           }
         ],
-        "timeBucket": "NT",
-        "dayPattern": "Wednesday & Saturday 18:30-21:30",
+        "timeBucket": "AM",
+        "dayPattern": "Saturday & Sunday 9:30-18:00 (incl. 1 hr lunch break)",
         "meetingDays": [
-          3,
+          0,
           6
         ],
         "outlinePdfPath": "courseOutline/M5/MSBA7015_Service-Operations-Management-(2026-27).pdf",
         "meetings": [
           {
-            "date": "2027-03-20",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
-            "sessionType": "lecture"
-          },
-          {
-            "date": "2027-03-24",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
-            "sessionType": "lecture"
-          },
-          {
-            "date": "2027-03-31",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
-            "sessionType": "lecture"
-          },
-          {
-            "date": "2027-04-03",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
-            "sessionType": "lecture"
-          },
-          {
-            "date": "2027-04-07",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
-            "sessionType": "lecture"
-          },
-          {
             "date": "2027-04-10",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
+            "startTime": "09:30",
+            "endTime": "18:00",
+            "venue": "HKU Shenzhen",
             "sessionType": "lecture"
           },
           {
-            "date": "2027-04-14",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
+            "date": "2027-04-11",
+            "startTime": "09:30",
+            "endTime": "18:00",
+            "venue": "HKU Shenzhen",
             "sessionType": "lecture"
           },
           {
             "date": "2027-04-17",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
+            "startTime": "09:30",
+            "endTime": "18:00",
+            "venue": "HKU Shenzhen",
             "sessionType": "lecture"
           },
           {
-            "date": "2027-04-21",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
-            "sessionType": "lecture"
-          },
-          {
-            "date": "2027-04-24",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
+            "date": "2027-04-18",
+            "startTime": "09:30",
+            "endTime": "18:00",
+            "venue": "HKU Shenzhen",
             "sessionType": "lecture"
           }
         ]
@@ -5632,14 +5583,14 @@
             "sessionType": "lecture"
           },
           {
-            "date": "2027-04-27",
+            "date": "2027-04-03",
             "startTime": "09:30",
             "endTime": "18:00",
             "venue": "HKU Shenzhen",
             "sessionType": "lecture"
           },
           {
-            "date": "2027-04-28",
+            "date": "2027-04-04",
             "startTime": "09:30",
             "endTime": "18:00",
             "venue": "HKU Shenzhen",

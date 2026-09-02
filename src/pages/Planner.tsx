@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import CourseDetailModal from '../components/CourseDetailModal'
 import PlannerCalendar from '../components/PlannerCalendar'
+import TeachingPlanUpdateNotice from '../components/TeachingPlanUpdateNotice'
 import WeekdayStrip from '../components/WeekdayStrip'
 import { useCourses, useRequirements } from '../hooks/useCoursesData'
 import { useSelections } from '../hooks/useSelections'
@@ -157,6 +158,8 @@ export default function Planner() {
           </div>
         </div>
       )}
+
+      <TeachingPlanUpdateNotice />
 
       {conflicts.map((c, i) => (
         <div key={i} className={`conflict-alert ${c.type === 'error' ? 'conflict-error' : 'conflict-warning'}`}>

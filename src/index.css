@@ -164,6 +164,76 @@ a:hover { text-decoration: underline; }
 .conflict-error { background: var(--error-bg); color: var(--error); border: 1px solid var(--error); }
 .conflict-warning { background: var(--warning-bg); color: #7a5900; border: 1px solid var(--warning); }
 
+.teaching-plan-notice {
+  background: #fff8e1;
+  border: 1px solid #f9ab00;
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  padding: 14px 16px;
+}
+.teaching-plan-notice--compact {
+  padding: 10px 12px;
+}
+.teaching-plan-notice-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #7a5900;
+}
+.teaching-plan-notice-text {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #7a5900;
+}
+.teaching-plan-notice-text code {
+  background: rgba(249, 171, 0, 0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.teaching-plan-notice--compact .teaching-plan-notice-text {
+  margin-top: 2px;
+  font-size: 12px;
+}
+.teaching-plan-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+.teaching-plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: #fffdf5;
+}
+.teaching-plan-table th,
+.teaching-plan-table td {
+  border: 1px solid #f3d48a;
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.teaching-plan-table th {
+  background: #fff3cd;
+  color: #7a5900;
+  font-weight: 700;
+}
+.teaching-plan-course-code {
+  font-weight: 700;
+  color: var(--text);
+}
+.teaching-plan-course-title {
+  margin-top: 2px;
+  color: var(--text-secondary);
+}
+.teaching-plan-old {
+  color: #b3261e;
+  text-decoration: line-through;
+}
+.teaching-plan-new {
+  color: #137333;
+  font-weight: 700;
+}
+
 .selection-item {
   display: flex;
   align-items: center;
@@ -389,6 +459,8 @@ a:hover { text-decoration: underline; }
   .planner-stats { grid-template-columns: repeat(2, 1fr); }
   .pdf-viewer { height: 400px; }
   .course-card-header { flex-direction: column; }
+  .teaching-plan-table th,
+  .teaching-plan-table td { padding: 6px 8px; }
 }
 
 /* Hamburger for mobile */
