@@ -368,15 +368,36 @@ a:hover { text-decoration: underline; }
   margin-bottom: 12px;
   padding: 14px 16px;
 }
+.teaching-plan-notice--folded {
+  padding-bottom: 12px;
+}
+.teaching-plan-notice-toggle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  padding-right: 72px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
 .teaching-plan-notice-title {
   font-size: 14px;
   font-weight: 700;
   color: #7a5900;
-  padding-right: 72px;
   overflow-wrap: anywhere;
 }
+.teaching-plan-notice-chevron {
+  flex-shrink: 0;
+  color: #7a5900;
+  font-size: 14px;
+  line-height: 1.4;
+}
 .teaching-plan-notice-text {
-  margin-top: 4px;
+  margin-top: 8px;
   font-size: 13px;
   color: #7a5900;
 }

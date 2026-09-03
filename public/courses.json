@@ -670,23 +670,16 @@
           },
           {
             "date": "2026-09-23",
-            "startTime": "18:30",
-            "endTime": "20:00",
+            "startTime": "17:00",
+            "endTime": "18:30",
             "venue": "Classroom H",
             "sessionType": "tutorial"
           },
           {
-            "date": "2026-09-29",
-            "startTime": "09:30",
-            "endTime": "12:30",
-            "venue": "LT104",
-            "sessionType": "lecture"
-          },
-          {
-            "date": "2026-10-02",
-            "startTime": "09:30",
-            "endTime": "12:30",
-            "venue": "LT104",
+            "date": "2026-09-23",
+            "startTime": "18:30",
+            "endTime": "21:30",
+            "venue": "Classroom EFG",
             "sessionType": "lecture"
           },
           {
@@ -700,6 +693,13 @@
             "date": "2026-10-06",
             "startTime": "09:30",
             "endTime": "12:30",
+            "venue": "LT104",
+            "sessionType": "lecture"
+          },
+          {
+            "date": "2026-10-07",
+            "startTime": "18:30",
+            "endTime": "21:30",
             "venue": "LT104",
             "sessionType": "lecture"
           },
@@ -791,16 +791,9 @@
             "sessionType": "tutorial"
           },
           {
-            "date": "2026-09-29",
-            "startTime": "14:00",
-            "endTime": "17:00",
-            "venue": "LT104",
-            "sessionType": "lecture"
-          },
-          {
-            "date": "2026-10-02",
-            "startTime": "14:00",
-            "endTime": "17:00",
+            "date": "2026-09-24",
+            "startTime": "18:30",
+            "endTime": "21:30",
             "venue": "LT104",
             "sessionType": "lecture"
           },
@@ -816,6 +809,13 @@
             "startTime": "14:00",
             "endTime": "17:00",
             "venue": "LT104",
+            "sessionType": "lecture"
+          },
+          {
+            "date": "2026-10-08",
+            "startTime": "18:30",
+            "endTime": "21:30",
+            "venue": "Classroom J",
             "sessionType": "lecture"
           },
           {
@@ -880,10 +880,10 @@
         "outlinePdfPath": "courseOutline/M2/MSBA7002-Business-Statistics-(2026-27).pdf",
         "meetings": [
           {
-            "date": "2026-10-24",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "A205-01&02",
+            "date": "2026-10-22",
+            "startTime": "09:00",
+            "endTime": "12:00",
+            "venue": "MC-MBG07",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Zhanrui CAI"
@@ -913,7 +913,7 @@
             "date": "2026-10-30",
             "startTime": "18:00",
             "endTime": "20:00",
-            "venue": "LT104",
+            "venue": "Classroom ABC",
             "sessionType": "tutorial"
           },
           {
@@ -927,10 +927,10 @@
             ]
           },
           {
-            "date": "2026-11-07",
+            "date": "2026-11-06",
             "startTime": "18:30",
             "endTime": "21:30",
-            "venue": "LT104",
+            "venue": "MC-LE6",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Zhanrui CAI"
@@ -954,10 +954,10 @@
             "sessionType": "tutorial"
           },
           {
-            "date": "2026-11-14",
+            "date": "2026-11-13",
             "startTime": "18:30",
             "endTime": "21:30",
-            "venue": "Classroom H",
+            "venue": "LT104",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Weichen WANG"
@@ -1040,16 +1040,6 @@
             ]
           },
           {
-            "date": "2026-10-25",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
-            "sessionType": "lecture",
-            "instructors": [
-              "Prof. Zhanrui CAI"
-            ]
-          },
-          {
             "date": "2026-10-26",
             "startTime": "14:00",
             "endTime": "17:00",
@@ -1073,14 +1063,24 @@
             "date": "2026-10-30",
             "startTime": "18:00",
             "endTime": "20:00",
-            "venue": "LT104",
+            "venue": "Classroom ABC",
             "sessionType": "tutorial"
           },
           {
-            "date": "2026-11-02",
+            "date": "2026-11-01",
+            "startTime": "09:30",
+            "endTime": "12:30",
+            "venue": "Classroom ABC",
+            "sessionType": "lecture",
+            "instructors": [
+              "Prof. Zhanrui CAI"
+            ]
+          },
+          {
+            "date": "2026-11-01",
             "startTime": "14:00",
             "endTime": "17:00",
-            "venue": "LT104",
+            "venue": "Classroom ABC",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Zhanrui CAI"
@@ -1100,7 +1100,7 @@
             "date": "2026-11-09",
             "startTime": "14:00",
             "endTime": "17:00",
-            "venue": "Classroom H",
+            "venue": "LT104",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Weichen WANG"
@@ -1230,7 +1230,7 @@
             "date": "2026-11-07",
             "startTime": "09:30",
             "endTime": "12:30",
-            "venue": "Classroom H",
+            "venue": "MC-KKLG109",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Zhanrui CAI"
@@ -1257,7 +1257,7 @@
             "date": "2026-11-14",
             "startTime": "09:30",
             "endTime": "12:30",
-            "venue": "Classroom H",
+            "venue": "MC-KKLG109",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Weichen WANG"
@@ -1291,10 +1291,10 @@
             ]
           },
           {
-            "date": "2026-11-24",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
+            "date": "2026-11-25",
+            "startTime": "09:30",
+            "endTime": "12:30",
+            "venue": "MC-KKLG109",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Weichen WANG"
@@ -1330,10 +1330,10 @@
         "outlinePdfPath": "courseOutline/M2/MSBA7002-Business-Statistics-(2026-27).pdf",
         "meetings": [
           {
-            "date": "2026-10-27",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
+            "date": "2026-10-24",
+            "startTime": "14:00",
+            "endTime": "17:00",
+            "venue": "Classroom EFG",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Zhanrui CAI"
@@ -1377,10 +1377,10 @@
             ]
           },
           {
-            "date": "2026-11-06",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
+            "date": "2026-11-07",
+            "startTime": "14:00",
+            "endTime": "17:00",
+            "venue": "MC-MB201",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Zhanrui CAI"
@@ -1404,10 +1404,10 @@
             "sessionType": "tutorial"
           },
           {
-            "date": "2026-11-17",
-            "startTime": "18:30",
-            "endTime": "21:30",
-            "venue": "LT104",
+            "date": "2026-11-14",
+            "startTime": "14:00",
+            "endTime": "17:00",
+            "venue": "MC-MB201",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Weichen WANG"
@@ -1444,7 +1444,7 @@
             "date": "2026-11-25",
             "startTime": "14:00",
             "endTime": "17:00",
-            "venue": "LT104",
+            "venue": "MC-MB237",
             "sessionType": "lecture",
             "instructors": [
               "Prof. Weichen WANG"

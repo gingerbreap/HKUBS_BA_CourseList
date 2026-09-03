@@ -18,7 +18,7 @@ const en: TranslationTree = {
   footer: {
     credit: 'Built by 缄默姜饼, with technical support from Cursor, Google Analytics and Cloudflare.',
     disclaimer1:
-      'Timetable data is sourced from the MSc(BA) Programme Office Teaching Plan 2026-27. Graduation and stream requirements are sourced from the programme website and Curriculum Requirements for Concentrations. Last verified against Programme Office materials: 18 Aug 2026, 17:10 HKT. All content is provided as-is.',
+      'Timetable data is sourced from the MSc(BA) Programme Office Teaching Plan 2026-27. Graduation and stream requirements are sourced from the programme website and Curriculum Requirements for Concentrations. Last verified against Programme Office materials: 3 Sep 2026, 17:23 HKT. All content is provided as-is.',
     disclaimer2:
       'This tool does not represent the official position, guarantees, or commitments of the University of Hong Kong or the Faculty of Business and Economics. Schedules, assessments, times, and graduation requirements may change. Users should verify information through official channels, the Teaching Plan, and the Programme Office before making enrolment decisions. The developer is not liable for enrolment outcomes, undetected conflicts, graduation progress, or other consequences of using this site.',
     disclaimer3:
@@ -187,7 +187,12 @@ const en: TranslationTree = {
   },
   teachingPlan: {
     title: 'Teaching Plan updates synced',
+    titleDated: '({{timestamp}}) Teaching Plan updates synced: {{courses}}',
     body: 'Schedules for {{code1}} and {{code2}} have been updated to the latest Teaching Plan. Conflicts and calendar events may differ from earlier versions.',
+    body7015_7037:
+      'Schedules for {{code1}} and {{code2}} have been updated to the latest Teaching Plan. Conflicts and calendar events may differ from earlier versions.',
+    body7002_7003:
+      '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; Class C tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. Conflicts and calendar events may differ from earlier versions.',
     colCourse: 'Course',
     colField: 'Field',
     colOld: 'Previous',
