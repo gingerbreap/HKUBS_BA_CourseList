@@ -24,7 +24,13 @@ function emojiFor(kind: ChangePart['emoji']): string {
   return ''
 }
 
-function ChangeCell({ parts }: { parts: ChangePart[] }) {
+function ChangeCell({
+  parts,
+  hideTimeEmoji = false,
+}: {
+  parts: ChangePart[]
+  hideTimeEmoji?: boolean
+}) {
   return (
     <div className="teaching-plan-change-parts">
       {parts.map((part, index) => (
@@ -32,18 +38,35 @@ function ChangeCell({ parts }: { parts: ChangePart[] }) {
           key={`${index}-${part.text}`}
           className={part.emoji === 'venue' ? 'teaching-plan-change-part teaching-plan-change-part--venue' : 'teaching-plan-change-part'}
         >
-          {emojiFor(part.emoji)}{part.text}
+          {hideTimeEmoji && part.emoji === 'time' ? '' : emojiFor(part.emoji)}{part.text}
         </div>
       ))}
     </div>
   )
 }
 
+function extractDateToken(text: string): string | null {
+  const match = text.match(
+    /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}(?:,\s*\d{4})?/i,
+  )
+  return match ? match[0].replace(/,/g, '').replace(/\s+/g, ' ').trim().toLowerCase() : null
+}
+
+/** True when Previous/Updated clock fields move to a different calendar day. */
+function involvesDateChange(previous: ChangePart[], updated: ChangePart[]): boolean {
+  const prevDates = previous.map(p => extractDateToken(p.text)).filter((d): d is string => !!d)
+  const nextDates = updated.map(p => extractDateToken(p.text)).filter((d): d is string => !!d)
+  if (prevDates.length === 0 || nextDates.length === 0) return false
+  return prevDates[0] !== nextDates[0]
+}
+
 function itemLabel(
   row: TeachingPlanDisplayRow,
   t: (key: string, vars?: Record<string, string | number>) => string,
 ): string {
-  // Dated session items: "Sep 23 TUT 时间" / time only if same-kind collision
+  const dateChanged = involvesDateChange(row.previous, row.updated)
+
+  // Dated session items: "Sep 23 时间" — LEC/TUT lives in the Class column
   if (
     row.itemKey === 'sessionVenue'
     || row.itemKey === 'sessionTime'
@@ -51,7 +74,6 @@ function itemLabel(
   ) {
     const params: Record<string, string> = {
       date: row.itemDate ?? '',
-      kind: row.sessionKind ?? 'LEC',
     }
     if (row.itemTime) params.time = row.itemTime
     const timed = !!row.itemTime
@@ -59,7 +81,18 @@ function itemLabel(
       return t(timed ? 'teachingPlan.items.sessionVenueTimed' : 'teachingPlan.items.sessionVenue', params)
     }
     if (row.itemKey === 'sessionTime') {
+      // Same-day clock change keeps 时间; cross-day move uses 日期
+      if (dateChanged) {
+        return timed
+          ? t('teachingPlan.items.sessionDateTimed', params)
+          : t('teachingPlan.items.sessionDate', params)
+      }
       return t(timed ? 'teachingPlan.items.sessionTimeTimed' : 'teachingPlan.items.sessionTime', params)
+    }
+    if (dateChanged) {
+      return timed
+        ? t('teachingPlan.items.sessionDateVenueTimed', params)
+        : t('teachingPlan.items.sessionDateVenue', params)
     }
     return t(
       timed ? 'teachingPlan.items.sessionTimeVenueTimed' : 'teachingPlan.items.sessionTimeVenue',
@@ -67,20 +100,40 @@ function itemLabel(
     )
   }
 
+  // Plain item names — no LEC/TUT prefix (TUT is a Class column value)
+  // Date change: 时间 → 日期, 时间与教室 → 日期与教室
+  if (row.itemKey === 'lecTimeVenue' || row.itemKey === 'tutTimeVenue' || row.itemKey === 'timeVenue') {
+    return t(dateChanged ? 'teachingPlan.items.dateVenue' : 'teachingPlan.items.timeVenue')
+  }
+  if (
+    row.itemKey === 'lecTime'
+    || row.itemKey === 'tutTime'
+    || row.itemKey === 'time'
+    || row.itemKey === 'date'
+  ) {
+    return t(dateChanged || row.itemKey === 'date' ? 'teachingPlan.items.date' : 'teachingPlan.items.time')
+  }
+  if (row.itemKey === 'lecVenue' || row.itemKey === 'tutVenue') {
+    return t('teachingPlan.items.venue')
+  }
+  if (row.itemKey === 'dateVenue') {
+    return t('teachingPlan.items.dateVenue')
+  }
+
   const params: Record<string, string> = {}
   if (row.itemDate) params.date = row.itemDate
   if (row.itemTime) params.time = row.itemTime
-
-  // LEC/TUT vs plain labels depending on whether the course has tutorials
-  if (!row.hasTutorials) {
-    if (row.itemKey === 'lecTimeVenue') return t('teachingPlan.items.timeVenue')
-    if (row.itemKey === 'lecTime') return t('teachingPlan.items.time')
-    if (row.itemKey === 'lecVenue') return t('teachingPlan.items.venue')
-    if (row.itemKey === 'tutTime') return t('teachingPlan.items.time')
-    if (row.itemKey === 'tutVenue') return t('teachingPlan.items.venue')
-  }
-
   return t(`teachingPlan.items.${row.itemKey}`, params)
+}
+
+function previousPartsForDisplay(row: TeachingPlanDisplayRow): ChangePart[] {
+  // Date + venue reschedule: Previous only needs the old date/time, not the old venue
+  const dateChanged = involvesDateChange(row.previous, row.updated)
+  const updatedHasVenue = row.updated.some(p => p.emoji === 'venue')
+  if (dateChanged && updatedHasVenue) {
+    return row.previous.filter(p => p.emoji !== 'venue')
+  }
+  return row.previous
 }
 
 function selectedKey(courseCode: string, sectionId: string): string {
@@ -153,6 +206,7 @@ function NoticeCard({
                 {displayRows.map(row => {
                   const isSelectedClass = !!(
                     row.sectionId
+                    && row.sectionId !== 'TUT'
                     && selectedSet.has(selectedKey(row.courseCode, row.sectionId))
                   )
                   return (
@@ -175,7 +229,7 @@ function NoticeCard({
                       </td>
                       <td>{row.showItem ? itemLabel(row, t) : null}</td>
                       <td className="teaching-plan-old-cell">
-                        <ChangeCell parts={row.previous} />
+                        <ChangeCell parts={previousPartsForDisplay(row)} hideTimeEmoji />
                       </td>
                       <td className="teaching-plan-new-cell">
                         <ChangeCell parts={row.updated} />

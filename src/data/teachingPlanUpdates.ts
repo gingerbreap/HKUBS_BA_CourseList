@@ -7,17 +7,20 @@ export interface ChangePart {
 }
 
 export interface TeachingPlanUpdateRow {
-  /** Class letter, e.g. "C". Omit for course-level changes. */
+  /**
+   * Class letter (A/B/C…) or "TUT" for tutorial-wide changes
+   * (tutorials are not bound to a lecture class).
+   */
   sectionId?: string
   /**
    * i18n key under teachingPlan.items.*
-   * sessionVenue / sessionTime / sessionTimeVenue use itemDate + sessionKind
+   * sessionVenue / sessionTime / sessionTimeVenue use itemDate
    * (+ optional itemTime when same-day same-kind sessions need disambiguation).
    */
   itemKey: string
   /** Date label for dated session items, e.g. "Nov 9" */
   itemDate?: string
-  /** LEC or TUT for dated session items */
+  /** LEC or TUT — used to place TUT rows last; not shown in Rescheduled Item */
   sessionKind?: 'LEC' | 'TUT'
   /**
    * Clock time only when that day has multiple sessions of the same kind
@@ -77,7 +80,14 @@ export function buildDisplayRows(notice: TeachingPlanNotice): TeachingPlanDispla
 
   for (const update of notice.updates) {
     const hasTutorials = !!update.hasTutorials
-    for (const [index, row] of update.rows.entries()) {
+    // Lecture-class rows first; tutorial-wide ("TUT") rows last within the course
+    const orderedRows = [...update.rows].sort((a, b) => {
+      const aTut = a.sectionId === 'TUT' || a.sessionKind === 'TUT' || a.itemKey.startsWith('tut') ? 1 : 0
+      const bTut = b.sectionId === 'TUT' || b.sessionKind === 'TUT' || b.itemKey.startsWith('tut') ? 1 : 0
+      return aTut - bTut
+    })
+
+    for (const [index, row] of orderedRows.entries()) {
       const section = row.sectionId ?? ''
       const itemDate = row.itemDate ?? ''
       const sessionKind = row.sessionKind ?? ''
@@ -133,9 +143,9 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
   {
     id: '20260903-7002-7003',
     timestamp: '2026/09/03 17:23',
-    courseRefs: '7002 & 7003',
-    bodyKey: 'body7002_7003',
-    bodyParams: { code1: 'MSBA7002', code2: 'MSBA7003' },
+    courseRefs: '7002, 7003 & 7004',
+    bodyKey: 'body7002_7003_7004',
+    bodyParams: { code1: 'MSBA7002', code2: 'MSBA7003', code3: 'MSBA7004' },
     defaultExpanded: true,
     updates: [
       {
@@ -162,14 +172,6 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
             ],
           },
           {
-            sectionId: 'C',
-            itemKey: 'sessionTime',
-            itemDate: 'Sep 23',
-            sessionKind: 'TUT',
-            previous: [plain('18:30-20:00')],
-            updated: [plain('17:00-18:30')],
-          },
-          {
             sectionId: 'D',
             itemKey: 'lecTimeVenue',
             previous: [time('Sep 29, 2026 (Tue)')],
@@ -187,6 +189,14 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
               venue('Classroom J'),
             ],
           },
+          {
+            sectionId: 'TUT',
+            itemKey: 'sessionTime',
+            itemDate: 'Sep 23',
+            sessionKind: 'TUT',
+            previous: [plain('18:30-20:00')],
+            updated: [plain('17:00-18:30')],
+          },
         ],
       },
       {
@@ -197,7 +207,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
           {
             sectionId: 'A',
             itemKey: 'lecTimeVenue',
-            previous: [time('Oct 24, 2026 (Sat) 18:30-21:30'), venue('A205-01&02')],
+            previous: [time('Oct 24, 2026 (Sat) 18:30-21:30')],
             updated: [time('Oct 22, 2026 (Thu) 09:00-12:00'), venue('MC-MBG07')],
           },
           {
@@ -209,16 +219,8 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
           {
             sectionId: 'A',
             itemKey: 'lecTimeVenue',
-            previous: [time('Nov 14, 2026 (Sat) 18:30-21:30'), venue('Classroom H')],
+            previous: [time('Nov 14, 2026 (Sat) 18:30-21:30')],
             updated: [time('Nov 13, 2026 (Fri) 18:30-21:30'), venue('LT104')],
-          },
-          {
-            sectionId: 'A',
-            itemKey: 'sessionVenue',
-            itemDate: 'Oct 30',
-            sessionKind: 'TUT',
-            previous: [plain('LT104')],
-            updated: [plain('Classroom ABC')],
           },
           {
             sectionId: 'B',
@@ -287,6 +289,28 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
             sessionKind: 'LEC',
             previous: [plain('LT104')],
             updated: [plain('MC-MB237')],
+          },
+          {
+            sectionId: 'TUT',
+            itemKey: 'sessionVenue',
+            itemDate: 'Oct 30',
+            sessionKind: 'TUT',
+            previous: [plain('LT104')],
+            updated: [plain('Classroom ABC')],
+          },
+        ],
+      },
+      {
+        courseCode: 'MSBA7004',
+        courseTitle: 'Operations Analytics',
+        hasTutorials: true,
+        rows: [
+          {
+            sectionId: 'TUT',
+            itemKey: 'tutTime',
+            sessionKind: 'TUT',
+            previous: [time('Nov 19, 2026 (Thu) 18:30-21:00')],
+            updated: [time('Nov 16, 2026 (Mon) 18:30-21:00')],
           },
         ],
       },

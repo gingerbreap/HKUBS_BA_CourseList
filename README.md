@@ -5,3 +5,5 @@
 **在线访问：** https://gingerbreap.github.io/HKUBS_BA_CourseList/
 
 数据来自教学计划与课程大纲 PDF，仅供选课参考，以学院正式通知为准。
+
+Teaching Plan 新旧 PDF 与改动检查清单见 [`src/teachingPlan/README.md`](src/teachingPlan/README.md)。
