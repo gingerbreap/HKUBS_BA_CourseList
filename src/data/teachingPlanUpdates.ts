@@ -1,29 +1,120 @@
+export type ChangeEmoji = 'time' | 'venue'
+
+export interface ChangePart {
+  text: string
+  /** ⏰ for date/time changes, 📌 for venue changes */
+  emoji?: ChangeEmoji
+}
+
 export interface TeachingPlanUpdateRow {
-  label: string
-  oldValue: string
-  newValue: string
+  /** Class letter, e.g. "C". Omit for course-level changes. */
+  sectionId?: string
+  /**
+   * i18n key under teachingPlan.items.*
+   * sessionVenue / sessionTime / sessionTimeVenue use itemDate (+ optional itemTime).
+   */
+  itemKey: string
+  /** Date label for "X Session …", e.g. "Nov 9" */
+  itemDate?: string
+  /** Time when multiple sessions share that date, e.g. "14:00-17:00" */
+  itemTime?: string
+  previous: ChangePart[]
+  updated: ChangePart[]
 }
 
 export interface TeachingPlanUpdate {
   courseCode: string
   courseTitle: string
+  /** Course has tutorials — use LEC/TUT item labels instead of plain Time/Venue */
+  hasTutorials?: boolean
   rows: TeachingPlanUpdateRow[]
 }
 
 export interface TeachingPlanNotice {
-  /** Stable id used for dismiss persistence */
   id: string
-  /** Display timestamp prefix, e.g. 2026/09/03 17:23 */
   timestamp: string
-  /** Short course refs for title, e.g. 7002 & 7003 */
   courseRefs: string
-  /** i18n body key under teachingPlan */
   bodyKey: string
   bodyParams?: Record<string, string>
-  /** Whether the notice starts expanded */
   defaultExpanded: boolean
   updates: TeachingPlanUpdate[]
 }
+
+export interface TeachingPlanDisplayRow {
+  key: string
+  courseCode: string
+  courseTitle: string
+  sectionId?: string
+  itemKey: string
+  itemDate?: string
+  itemTime?: string
+  hasTutorials: boolean
+  previous: ChangePart[]
+  updated: ChangePart[]
+  /** Full course block (code + title) — first row of a course */
+  showCourse: boolean
+  /** Course code only — first row of a new class within the same course */
+  showCourseCode: boolean
+  showClass: boolean
+  showItem: boolean
+}
+
+export function buildDisplayRows(notice: TeachingPlanNotice): TeachingPlanDisplayRow[] {
+  const rows: TeachingPlanDisplayRow[] = []
+  let prevCourse: string | null = null
+  let prevSection: string | null = null
+  let prevItemKey: string | null = null
+  let prevItemDate: string | null = null
+  let prevItemTime: string | null = null
+
+  for (const update of notice.updates) {
+    const hasTutorials = !!update.hasTutorials
+    for (const [index, row] of update.rows.entries()) {
+      const section = row.sectionId ?? ''
+      const itemDate = row.itemDate ?? ''
+      const itemTime = row.itemTime ?? ''
+      const courseChanged = update.courseCode !== prevCourse
+      const classChanged = courseChanged || section !== prevSection
+      const showCourse = courseChanged
+      const showCourseCode = !courseChanged && classChanged
+      const showClass = classChanged && !!row.sectionId
+      const showItem =
+        classChanged
+        || row.itemKey !== prevItemKey
+        || itemDate !== prevItemDate
+        || itemTime !== prevItemTime
+
+      rows.push({
+        key: `${notice.id}-${update.courseCode}-${section}-${row.itemKey}-${itemDate}-${itemTime}-${index}`,
+        courseCode: update.courseCode,
+        courseTitle: update.courseTitle,
+        sectionId: row.sectionId,
+        itemKey: row.itemKey,
+        itemDate: row.itemDate,
+        itemTime: row.itemTime,
+        hasTutorials,
+        previous: row.previous,
+        updated: row.updated,
+        showCourse,
+        showCourseCode,
+        showClass,
+        showItem,
+      })
+
+      prevCourse = update.courseCode
+      prevSection = section
+      prevItemKey = row.itemKey
+      prevItemDate = itemDate
+      prevItemTime = itemTime
+    }
+  }
+
+  return rows
+}
+
+const time = (text: string): ChangePart => ({ text, emoji: 'time' })
+const venue = (text: string): ChangePart => ({ text, emoji: 'venue' })
+const plain = (text: string): ChangePart => ({ text })
 
 /** Newest first. */
 export const teachingPlanNotices: TeachingPlanNotice[] = [
@@ -38,52 +129,148 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
       {
         courseCode: 'MSBA7003',
         courseTitle: 'Decision Analytics',
+        hasTutorials: true,
         rows: [
           {
-            label: 'Class C & D lectures',
-            oldValue: 'Sep 29 & Oct 2, 2026 (Tue/Fri slots)',
-            newValue: 'Cancelled; rescheduled to evening makeup sessions',
+            sectionId: 'C',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Sep 29, 2026 (Tue)')],
+            updated: [
+              time('Sep 23, 2026 (Wed) 18:30-21:30'),
+              venue('Classroom EFG'),
+            ],
           },
           {
-            label: 'Class C makeup lectures',
-            oldValue: '—',
-            newValue: 'Sep 23, 2026 (Wed) 18:30-21:30, Classroom EFG; Oct 7, 2026 (Wed) 18:30-21:30, LT104',
+            sectionId: 'C',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Oct 2, 2026 (Fri)')],
+            updated: [
+              time('Oct 7, 2026 (Wed) 18:30-21:30'),
+              venue('LT104'),
+            ],
           },
           {
-            label: 'Class D makeup lectures',
-            oldValue: '—',
-            newValue: 'Sep 24, 2026 (Thu) 18:30-21:30, LT104; Oct 8, 2026 (Thu) 18:30-21:30, Classroom J',
+            sectionId: 'C',
+            itemKey: 'sessionTime',
+            itemDate: 'Sep 23',
+            itemTime: '18:30-20:00',
+            previous: [plain('18:30-20:00')],
+            updated: [plain('17:00-18:30')],
           },
           {
-            label: 'Class C tutorial (Sep 23)',
-            oldValue: '18:30-20:00, Classroom H',
-            newValue: '17:00-18:30, Classroom H',
+            sectionId: 'D',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Sep 29, 2026 (Tue)')],
+            updated: [
+              time('Sep 24, 2026 (Thu) 18:30-21:30'),
+              venue('LT104'),
+            ],
+          },
+          {
+            sectionId: 'D',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Oct 2, 2026 (Fri)')],
+            updated: [
+              time('Oct 8, 2026 (Thu) 18:30-21:30'),
+              venue('Classroom J'),
+            ],
           },
         ],
       },
       {
         courseCode: 'MSBA7002',
         courseTitle: 'Business Statistics',
+        hasTutorials: true,
         rows: [
           {
-            label: 'Class A schedule & venues',
-            oldValue: 'Oct 24 (eve), Nov 7 (eve), Nov 14 (eve); Oct 30 tut at LT104',
-            newValue: 'Oct 22 (09:00 MC-MBG07), Nov 6 (Fri eve MC-LE6), Nov 13 (Fri eve); Oct 30 tut at Classroom ABC',
+            sectionId: 'A',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Oct 24, 2026 (Sat) 18:30-21:30'), venue('A205-01&02')],
+            updated: [time('Oct 22, 2026 (Thu) 09:00-12:00'), venue('MC-MBG07')],
           },
           {
-            label: 'Class B schedule & venues',
-            oldValue: 'Oct 22/25/26/29, Nov 2/5/9/16/19/23',
-            newValue: 'Oct 22 (eve Classroom J), Oct 26/29, Nov 1 (Sun AM+PM Classroom ABC), Nov 5 (eve Classroom H), Nov 9/16/19/23',
+            sectionId: 'A',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Nov 7, 2026 (Sat) 18:30-21:30')],
+            updated: [time('Nov 6, 2026 (Fri) 18:30-21:30'), venue('MC-LE6')],
           },
           {
-            label: 'Class C venues',
-            oldValue: 'Classroom H (all lectures); Nov 24 evening makeup',
-            newValue: 'Classroom H; Nov 7/14/25 at MC-KKLG109; Nov 25 replaces Nov 24 evening',
+            sectionId: 'A',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Nov 14, 2026 (Sat) 18:30-21:30'), venue('Classroom H')],
+            updated: [time('Nov 13, 2026 (Fri) 18:30-21:30'), venue('LT104')],
           },
           {
-            label: 'Class D schedule & venues',
-            oldValue: 'Oct 27 (eve), Nov 6 (eve), Nov 17 (eve); mainly LT104',
-            newValue: 'Regular Wed/Sat from Oct 24; Oct 24 Classroom EFG; Nov 7/14 MC-MB201; Nov 25 MC-MB237',
+            sectionId: 'A',
+            itemKey: 'sessionVenue',
+            itemDate: 'Oct 30',
+            itemTime: '18:00-20:00',
+            previous: [plain('LT104')],
+            updated: [plain('Classroom ABC')],
+          },
+          {
+            sectionId: 'B',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Oct 25, 2026 (Sun) 18:30-21:30')],
+            updated: [time('Nov 1, 2026 (Sun) 09:30-12:30'), venue('Classroom ABC')],
+          },
+          {
+            sectionId: 'B',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Nov 2, 2026 (Mon) 14:00-17:00')],
+            updated: [time('Nov 1, 2026 (Sun) 14:00-17:00'), venue('Classroom ABC')],
+          },
+          {
+            sectionId: 'B',
+            itemKey: 'sessionVenue',
+            itemDate: 'Nov 9',
+            previous: [plain('Classroom H')],
+            updated: [plain('LT104')],
+          },
+          {
+            sectionId: 'C',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Nov 24, 2026 (Tue) 18:30-21:30')],
+            updated: [time('Nov 25, 2026 (Wed) 09:30-12:30'), venue('MC-KKLG109')],
+          },
+          {
+            sectionId: 'C',
+            itemKey: 'sessionVenue',
+            itemDate: 'Nov 7',
+            previous: [plain('Classroom H')],
+            updated: [plain('MC-KKLG109')],
+          },
+          {
+            sectionId: 'C',
+            itemKey: 'sessionVenue',
+            itemDate: 'Nov 14',
+            previous: [plain('Classroom H')],
+            updated: [plain('MC-KKLG109')],
+          },
+          {
+            sectionId: 'D',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Oct 27, 2026 (Tue) 18:30-21:30')],
+            updated: [time('Oct 24, 2026 (Sat) 14:00-17:00'), venue('Classroom EFG')],
+          },
+          {
+            sectionId: 'D',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Nov 6, 2026 (Fri) 18:30-21:30')],
+            updated: [time('Nov 7, 2026 (Sat) 14:00-17:00'), venue('MC-MB201')],
+          },
+          {
+            sectionId: 'D',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Nov 17, 2026 (Tue) 18:30-21:30')],
+            updated: [time('Nov 14, 2026 (Sat) 14:00-17:00'), venue('MC-MB201')],
+          },
+          {
+            sectionId: 'D',
+            itemKey: 'sessionVenue',
+            itemDate: 'Nov 25',
+            previous: [plain('LT104')],
+            updated: [plain('MC-MB237')],
           },
         ],
       },
@@ -100,37 +287,44 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
       {
         courseCode: 'MSBA7015',
         courseTitle: 'Service Operations Management',
+        hasTutorials: false,
         rows: [
           {
-            label: 'Class day & time',
-            oldValue: 'Wednesday & Saturday 18:30-21:30',
-            newValue: 'Saturday & Sunday 9:30-18:00 (incl. 1 hr lunch break)',
+            sectionId: 'A',
+            itemKey: 'time',
+            previous: [plain('Wednesday & Saturday 18:30-21:30')],
+            updated: [plain('Saturday & Sunday 9:30-18:00 (incl. 1 hr lunch break)')],
           },
           {
-            label: 'Class dates',
-            oldValue: 'Mar 20, 24, 31; Apr 3, 7, 10, 14, 17, 21, 24, 2027',
-            newValue: 'Apr 10, 11, 17, 18, 2027',
+            sectionId: 'A',
+            itemKey: 'dates',
+            previous: [plain('Mar 20, 24, 31; Apr 3, 7, 10, 14, 17, 21, 24, 2027')],
+            updated: [plain('Apr 10, 11, 17, 18, 2027')],
           },
           {
-            label: 'Venue',
-            oldValue: 'LT104',
-            newValue: 'HKU Shenzhen',
+            sectionId: 'A',
+            itemKey: 'venue',
+            previous: [plain('LT104')],
+            updated: [plain('HKU Shenzhen')],
           },
           {
-            label: 'Exam / final project',
-            oldValue: 'Final Presentation: May 3, 2027 (Mon), 09:30-12:30, Classroom ABC, D',
-            newValue: 'NA',
+            sectionId: 'A',
+            itemKey: 'examFinal',
+            previous: [plain('Final Presentation: May 3, 2027 (Mon) 09:30-12:30, Classroom ABC, D')],
+            updated: [plain('NA')],
           },
         ],
       },
       {
         courseCode: 'MSBA7037',
         courseTitle: 'A/B Testing in Product Management',
+        hasTutorials: false,
         rows: [
           {
-            label: 'Class dates',
-            oldValue: 'Mar 20, 21, 2027; Apr 27, 28, 2027',
-            newValue: 'Mar 20, 21, 2027; Apr 3, 4, 2027',
+            sectionId: 'A',
+            itemKey: 'dates',
+            previous: [plain('Mar 20, 21, 2027; Apr 27, 28, 2027')],
+            updated: [plain('Mar 20, 21, 2027; Apr 3, 4, 2027')],
           },
         ],
       },
@@ -138,6 +332,6 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
   },
 ]
 
-/** @deprecated Prefer teachingPlanNotices; kept for any legacy imports */
+/** @deprecated Prefer teachingPlanNotices */
 export const teachingPlanUpdates: TeachingPlanUpdate[] =
   teachingPlanNotices.flatMap(n => n.updates)

@@ -192,7 +192,7 @@ export default function Planner() {
         </div>
       )}
 
-      <TeachingPlanUpdateNotice />
+      <TeachingPlanUpdateNotice selections={selections} />
 
       <ConflictNotices conflicts={conflicts} />
 

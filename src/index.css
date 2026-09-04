@@ -426,9 +426,16 @@ a:hover { text-decoration: underline; }
   vertical-align: top;
 }
 .teaching-plan-table th {
-  background: #fff3cd;
+  background: #ffecad;
   color: #7a5900;
   font-weight: 700;
+}
+.teaching-plan-row--selected > td {
+  background: #fff8dc;
+}
+.teaching-plan-class--selected {
+  font-weight: 800;
+  color: #5c4400;
 }
 .teaching-plan-course-code {
   font-weight: 700;
@@ -437,6 +444,22 @@ a:hover { text-decoration: underline; }
 .teaching-plan-course-title {
   margin-top: 2px;
   color: var(--text-secondary);
+}
+.teaching-plan-change-parts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.teaching-plan-change-part {
+  line-height: 1.4;
+}
+.teaching-plan-old-cell .teaching-plan-change-part {
+  color: #b3261e;
+  text-decoration: line-through;
+}
+.teaching-plan-new-cell .teaching-plan-change-part {
+  color: #137333;
+  font-weight: 600;
 }
 .teaching-plan-old {
   color: #b3261e;

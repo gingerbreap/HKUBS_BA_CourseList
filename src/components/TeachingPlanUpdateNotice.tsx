@@ -1,10 +1,16 @@
-import { useState } from 'react'
-import { teachingPlanNotices, type TeachingPlanNotice } from '../data/teachingPlanUpdates'
+import { useMemo, useState } from 'react'
+import {
+  buildDisplayRows,
+  teachingPlanNotices,
+  type ChangePart,
+  type TeachingPlanDisplayRow,
+  type TeachingPlanNotice,
+} from '../data/teachingPlanUpdates'
 import { usePersistentDismiss } from '../hooks/usePersistentDismiss'
 import { useI18n } from '../i18n/context'
+import type { SelectedSection } from '../types'
 
 const DISMISS_PREFIX = 'msba-dismiss-teaching-plan-notice'
-/** Legacy key from the Aug 18 single-notice UI */
 const LEGACY_DISMISS_KEY = 'msba-dismiss-teaching-plan-notice'
 const LEGACY_NOTICE_ID = '20260818-7015-7037'
 
@@ -12,7 +18,79 @@ function dismissStorageKey(noticeId: string): string {
   return noticeId === LEGACY_NOTICE_ID ? LEGACY_DISMISS_KEY : `${DISMISS_PREFIX}:${noticeId}`
 }
 
-function NoticeCard({ notice }: { notice: TeachingPlanNotice }) {
+function emojiFor(kind: ChangePart['emoji']): string {
+  if (kind === 'time') return '⏰ '
+  if (kind === 'venue') return '📌 '
+  return ''
+}
+
+function ChangeCell({ parts }: { parts: ChangePart[] }) {
+  return (
+    <div className="teaching-plan-change-parts">
+      {parts.map((part, index) => (
+        <div
+          key={`${index}-${part.text}`}
+          className={part.emoji === 'venue' ? 'teaching-plan-change-part teaching-plan-change-part--venue' : 'teaching-plan-change-part'}
+        >
+          {emojiFor(part.emoji)}{part.text}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function itemLabel(
+  row: TeachingPlanDisplayRow,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
+  const params: Record<string, string> = {}
+  if (row.itemDate) params.date = row.itemDate
+  if (row.itemTime) params.time = row.itemTime
+
+  // Session items: "Nov 9 Session Venue" / with time when needed
+  if (row.itemKey === 'sessionVenue') {
+    return row.itemTime
+      ? t('teachingPlan.items.sessionVenueTimed', params)
+      : t('teachingPlan.items.sessionVenue', params)
+  }
+  if (row.itemKey === 'sessionTime') {
+    return row.itemTime
+      ? t('teachingPlan.items.sessionTimeTimed', params)
+      : t('teachingPlan.items.sessionTime', params)
+  }
+  if (row.itemKey === 'sessionTimeVenue') {
+    return row.itemTime
+      ? t('teachingPlan.items.sessionTimeVenueTimed', params)
+      : t('teachingPlan.items.sessionTimeVenue', params)
+  }
+
+  // LEC/TUT vs plain labels depending on whether the course has tutorials
+  if (!row.hasTutorials) {
+    if (row.itemKey === 'lecTimeVenue') return t('teachingPlan.items.timeVenue')
+    if (row.itemKey === 'lecTime') return t('teachingPlan.items.time')
+    if (row.itemKey === 'lecVenue') return t('teachingPlan.items.venue')
+    if (row.itemKey === 'tutTime') return t('teachingPlan.items.time')
+    if (row.itemKey === 'tutVenue') return t('teachingPlan.items.venue')
+  }
+
+  return t(`teachingPlan.items.${row.itemKey}`, params)
+}
+
+function selectedKey(courseCode: string, sectionId: string): string {
+  return `${courseCode}::${sectionId}`
+}
+
+function buildSelectedSet(selections: SelectedSection[]): Set<string> {
+  return new Set(selections.map(s => selectedKey(s.courseCode, s.sectionId)))
+}
+
+function NoticeCard({
+  notice,
+  selectedSet,
+}: {
+  notice: TeachingPlanNotice
+  selectedSet: Set<string>
+}) {
   const { t } = useI18n()
   const version = notice.updates.map(u => u.courseCode).join('+')
   const { dismissed, dismiss } = usePersistentDismiss(
@@ -21,6 +99,7 @@ function NoticeCard({ notice }: { notice: TeachingPlanNotice }) {
     `msba:dismiss-teaching-plan-${notice.id}`,
   )
   const [expanded, setExpanded] = useState(notice.defaultExpanded)
+  const displayRows = buildDisplayRows(notice)
 
   if (dismissed) return null
 
@@ -57,27 +136,46 @@ function NoticeCard({ notice }: { notice: TeachingPlanNotice }) {
               <thead>
                 <tr>
                   <th>{t('teachingPlan.colCourse')}</th>
-                  <th>{t('teachingPlan.colField')}</th>
+                  <th>{t('teachingPlan.colClass')}</th>
+                  <th>{t('teachingPlan.colItem')}</th>
                   <th>{t('teachingPlan.colOld')}</th>
                   <th>{t('teachingPlan.colNew')}</th>
                 </tr>
               </thead>
               <tbody>
-                {notice.updates.flatMap(update =>
-                  update.rows.map((row, index) => (
-                    <tr key={`${notice.id}-${update.courseCode}-${row.label}`}>
+                {displayRows.map(row => {
+                  const isSelectedClass = !!(
+                    row.sectionId
+                    && selectedSet.has(selectedKey(row.courseCode, row.sectionId))
+                  )
+                  return (
+                    <tr
+                      key={row.key}
+                      className={isSelectedClass ? 'teaching-plan-row--selected' : undefined}
+                    >
                       <td>
-                        <div className="teaching-plan-course-code">{update.courseCode}</div>
-                        {index === 0 && (
-                          <div className="teaching-plan-course-title">{update.courseTitle}</div>
-                        )}
+                        {row.showCourse ? (
+                          <>
+                            <div className="teaching-plan-course-code">{row.courseCode}</div>
+                            <div className="teaching-plan-course-title">{row.courseTitle}</div>
+                          </>
+                        ) : row.showCourseCode ? (
+                          <div className="teaching-plan-course-code">{row.courseCode}</div>
+                        ) : null}
                       </td>
-                      <td>{row.label}</td>
-                      <td><span className="teaching-plan-old">{row.oldValue}</span></td>
-                      <td><span className="teaching-plan-new">{row.newValue}</span></td>
+                      <td className={isSelectedClass ? 'teaching-plan-class--selected' : undefined}>
+                        {row.showClass ? (row.sectionId ?? '') : null}
+                      </td>
+                      <td>{row.showItem ? itemLabel(row, t) : null}</td>
+                      <td className="teaching-plan-old-cell">
+                        <ChangeCell parts={row.previous} />
+                      </td>
+                      <td className="teaching-plan-new-cell">
+                        <ChangeCell parts={row.updated} />
+                      </td>
                     </tr>
-                  )),
-                )}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -87,11 +185,17 @@ function NoticeCard({ notice }: { notice: TeachingPlanNotice }) {
   )
 }
 
-export default function TeachingPlanUpdateNotice() {
+export default function TeachingPlanUpdateNotice({
+  selections,
+}: {
+  selections: SelectedSection[]
+}) {
+  const selectedSet = useMemo(() => buildSelectedSet(selections), [selections])
+
   return (
     <>
       {teachingPlanNotices.map(notice => (
-        <NoticeCard key={notice.id} notice={notice} />
+        <NoticeCard key={notice.id} notice={notice} selectedSet={selectedSet} />
       ))}
     </>
   )
