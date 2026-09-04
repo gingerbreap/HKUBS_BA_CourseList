@@ -43,26 +43,33 @@ function itemLabel(
   row: TeachingPlanDisplayRow,
   t: (key: string, vars?: Record<string, string | number>) => string,
 ): string {
+  // Dated session items: "Sep 23 TUT 时间" / time only if same-kind collision
+  if (
+    row.itemKey === 'sessionVenue'
+    || row.itemKey === 'sessionTime'
+    || row.itemKey === 'sessionTimeVenue'
+  ) {
+    const params: Record<string, string> = {
+      date: row.itemDate ?? '',
+      kind: row.sessionKind ?? 'LEC',
+    }
+    if (row.itemTime) params.time = row.itemTime
+    const timed = !!row.itemTime
+    if (row.itemKey === 'sessionVenue') {
+      return t(timed ? 'teachingPlan.items.sessionVenueTimed' : 'teachingPlan.items.sessionVenue', params)
+    }
+    if (row.itemKey === 'sessionTime') {
+      return t(timed ? 'teachingPlan.items.sessionTimeTimed' : 'teachingPlan.items.sessionTime', params)
+    }
+    return t(
+      timed ? 'teachingPlan.items.sessionTimeVenueTimed' : 'teachingPlan.items.sessionTimeVenue',
+      params,
+    )
+  }
+
   const params: Record<string, string> = {}
   if (row.itemDate) params.date = row.itemDate
   if (row.itemTime) params.time = row.itemTime
-
-  // Session items: "Nov 9 Session Venue" / with time when needed
-  if (row.itemKey === 'sessionVenue') {
-    return row.itemTime
-      ? t('teachingPlan.items.sessionVenueTimed', params)
-      : t('teachingPlan.items.sessionVenue', params)
-  }
-  if (row.itemKey === 'sessionTime') {
-    return row.itemTime
-      ? t('teachingPlan.items.sessionTimeTimed', params)
-      : t('teachingPlan.items.sessionTime', params)
-  }
-  if (row.itemKey === 'sessionTimeVenue') {
-    return row.itemTime
-      ? t('teachingPlan.items.sessionTimeVenueTimed', params)
-      : t('teachingPlan.items.sessionTimeVenue', params)
-  }
 
   // LEC/TUT vs plain labels depending on whether the course has tutorials
   if (!row.hasTutorials) {

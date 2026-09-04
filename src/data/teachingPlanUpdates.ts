@@ -11,12 +11,18 @@ export interface TeachingPlanUpdateRow {
   sectionId?: string
   /**
    * i18n key under teachingPlan.items.*
-   * sessionVenue / sessionTime / sessionTimeVenue use itemDate (+ optional itemTime).
+   * sessionVenue / sessionTime / sessionTimeVenue use itemDate + sessionKind
+   * (+ optional itemTime when same-day same-kind sessions need disambiguation).
    */
   itemKey: string
-  /** Date label for "X Session …", e.g. "Nov 9" */
+  /** Date label for dated session items, e.g. "Nov 9" */
   itemDate?: string
-  /** Time when multiple sessions share that date, e.g. "14:00-17:00" */
+  /** LEC or TUT for dated session items */
+  sessionKind?: 'LEC' | 'TUT'
+  /**
+   * Clock time only when that day has multiple sessions of the same kind
+   * (e.g. two LECs). Not used for a single LEC + TUT pair.
+   */
   itemTime?: string
   previous: ChangePart[]
   updated: ChangePart[]
@@ -47,6 +53,7 @@ export interface TeachingPlanDisplayRow {
   sectionId?: string
   itemKey: string
   itemDate?: string
+  sessionKind?: 'LEC' | 'TUT'
   itemTime?: string
   hasTutorials: boolean
   previous: ChangePart[]
@@ -65,6 +72,7 @@ export function buildDisplayRows(notice: TeachingPlanNotice): TeachingPlanDispla
   let prevSection: string | null = null
   let prevItemKey: string | null = null
   let prevItemDate: string | null = null
+  let prevSessionKind: string | null = null
   let prevItemTime: string | null = null
 
   for (const update of notice.updates) {
@@ -72,6 +80,7 @@ export function buildDisplayRows(notice: TeachingPlanNotice): TeachingPlanDispla
     for (const [index, row] of update.rows.entries()) {
       const section = row.sectionId ?? ''
       const itemDate = row.itemDate ?? ''
+      const sessionKind = row.sessionKind ?? ''
       const itemTime = row.itemTime ?? ''
       const courseChanged = update.courseCode !== prevCourse
       const classChanged = courseChanged || section !== prevSection
@@ -82,15 +91,17 @@ export function buildDisplayRows(notice: TeachingPlanNotice): TeachingPlanDispla
         classChanged
         || row.itemKey !== prevItemKey
         || itemDate !== prevItemDate
+        || sessionKind !== prevSessionKind
         || itemTime !== prevItemTime
 
       rows.push({
-        key: `${notice.id}-${update.courseCode}-${section}-${row.itemKey}-${itemDate}-${itemTime}-${index}`,
+        key: `${notice.id}-${update.courseCode}-${section}-${row.itemKey}-${itemDate}-${sessionKind}-${itemTime}-${index}`,
         courseCode: update.courseCode,
         courseTitle: update.courseTitle,
         sectionId: row.sectionId,
         itemKey: row.itemKey,
         itemDate: row.itemDate,
+        sessionKind: row.sessionKind,
         itemTime: row.itemTime,
         hasTutorials,
         previous: row.previous,
@@ -105,6 +116,7 @@ export function buildDisplayRows(notice: TeachingPlanNotice): TeachingPlanDispla
       prevSection = section
       prevItemKey = row.itemKey
       prevItemDate = itemDate
+      prevSessionKind = sessionKind
       prevItemTime = itemTime
     }
   }
@@ -153,7 +165,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
             sectionId: 'C',
             itemKey: 'sessionTime',
             itemDate: 'Sep 23',
-            itemTime: '18:30-20:00',
+            sessionKind: 'TUT',
             previous: [plain('18:30-20:00')],
             updated: [plain('17:00-18:30')],
           },
@@ -204,7 +216,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
             sectionId: 'A',
             itemKey: 'sessionVenue',
             itemDate: 'Oct 30',
-            itemTime: '18:00-20:00',
+            sessionKind: 'TUT',
             previous: [plain('LT104')],
             updated: [plain('Classroom ABC')],
           },
@@ -224,6 +236,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
             sectionId: 'B',
             itemKey: 'sessionVenue',
             itemDate: 'Nov 9',
+            sessionKind: 'LEC',
             previous: [plain('Classroom H')],
             updated: [plain('LT104')],
           },
@@ -237,6 +250,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
             sectionId: 'C',
             itemKey: 'sessionVenue',
             itemDate: 'Nov 7',
+            sessionKind: 'LEC',
             previous: [plain('Classroom H')],
             updated: [plain('MC-KKLG109')],
           },
@@ -244,6 +258,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
             sectionId: 'C',
             itemKey: 'sessionVenue',
             itemDate: 'Nov 14',
+            sessionKind: 'LEC',
             previous: [plain('Classroom H')],
             updated: [plain('MC-KKLG109')],
           },
@@ -269,6 +284,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
             sectionId: 'D',
             itemKey: 'sessionVenue',
             itemDate: 'Nov 25',
+            sessionKind: 'LEC',
             previous: [plain('LT104')],
             updated: [plain('MC-MB237')],
           },
