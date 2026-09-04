@@ -4,6 +4,7 @@ const en: TranslationTree = {
   lang: {
     label: 'Language',
     zh: '简体中文',
+    zhHK: '繁體中文',
     en: 'English',
   },
   meta: {
@@ -20,7 +21,7 @@ const en: TranslationTree = {
     disclaimer1:
       'Timetable data is sourced from the MSc(BA) Programme Office Teaching Plan 2026-27. Graduation and stream requirements are sourced from the programme website and Curriculum Requirements for Concentrations. Last verified against Programme Office materials: 3 Sep 2026, 17:23 HKT. All content is provided as-is.',
     disclaimer2:
-      'This tool does not represent the official position, guarantees, or commitments of the University of Hong Kong or the Faculty of Business and Economics. Schedules, assessments, times, and graduation requirements may change. Users should verify information through official channels, the Teaching Plan, and the Programme Office before making enrolment decisions. The developer is not liable for enrolment outcomes, undetected conflicts, graduation progress, or other consequences of using this site.',
+      'This tool does not represent the official position, guarantees, or commitments of the University of Hong Kong or the Faculty of Business and Economics. Schedules, assessments, times, and graduation requirements may change at any time. Users must understand that the information provided may already be outdated after the sync/verification time stated above, and should verify facts through official channels, the Teaching Plan, and the Programme Office before making enrolment decisions independently. The developer is not liable for enrolment outcomes, undetected conflicts, graduation progress, or other consequences of using this site.',
     disclaimer3:
       'For tool or enrolment questions, contact the developer privately, ask in your class group, or contact the Programme Office directly.',
   },

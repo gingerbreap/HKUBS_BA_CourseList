@@ -53,6 +53,15 @@ export default function LanguagePicker({ className = '' }: LanguagePickerProps) 
           <button
             type="button"
             role="option"
+            aria-selected={locale === 'zh-HK'}
+            className={locale === 'zh-HK' ? 'active' : ''}
+            onClick={() => choose('zh-HK')}
+          >
+            {t('lang.zhHK')}
+          </button>
+          <button
+            type="button"
+            role="option"
             aria-selected={locale === 'en'}
             className={locale === 'en' ? 'active' : ''}
             onClick={() => choose('en')}

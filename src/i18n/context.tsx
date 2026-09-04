@@ -1,12 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import zhCN from './locales/zh-CN'
+import zhHK from './locales/zh-HK'
 import en from './locales/en'
 import { interpolate, resolveTranslation } from './resolve'
 import { DEFAULT_LOCALE, LOCALE_STORAGE_KEY, type Locale, type TranslationTree, type TranslationValue } from './types'
 
 const LOCALES: Record<Locale, TranslationTree> = {
   'zh-CN': zhCN,
+  'zh-HK': zhHK,
   en,
+}
+
+const HTML_LANG: Record<Locale, string> = {
+  'zh-CN': 'zh-CN',
+  'zh-HK': 'zh-HK',
+  en: 'en',
 }
 
 export interface I18nContextValue {
@@ -22,7 +30,7 @@ const I18nContext = createContext<I18nContextValue | null>(null)
 function readStoredLocale(): Locale {
   try {
     const stored = localStorage.getItem(LOCALE_STORAGE_KEY)
-    if (stored === 'en' || stored === 'zh-CN') return stored
+    if (stored === 'en' || stored === 'zh-CN' || stored === 'zh-HK') return stored
   } catch {
     // ignore
   }
@@ -63,7 +71,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [t])
 
   useEffect(() => {
-    document.documentElement.lang = locale === 'zh-CN' ? 'zh-CN' : 'en'
+    document.documentElement.lang = HTML_LANG[locale]
     document.title = t('meta.title')
   }, [locale, t])
 
