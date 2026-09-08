@@ -139,6 +139,7 @@ const en: TranslationTree = {
   },
   calendar: {
     pageTitle: 'My Calendar',
+    unreadTeachingPlan: '⚠️ There are currently {{count}} unread Teaching Plan update(s). Please review them.',
     title: 'Course calendar',
     subtitleEmpty: 'Selected courses will appear here',
     subtitleCount: '{{total}} events · {{month}} this month',
@@ -220,20 +221,20 @@ const en: TranslationTree = {
   },
   teachingPlan: {
     title: 'Teaching Plan updates synced',
-    titleDated: '[{{timestamp}}] {{courses}}',
+    titleDated: '{{timestamp}} | {{courses}}',
     sectionTitle: '❗️Teaching Plan update notices',
     reviewAllUpdates: 'Review all updates',
     markAllRead: 'Mark all as read',
     dismissRead: 'Read',
     archiveTitle: 'Teaching Plan update archive',
-    archiveNoticeTitle: '[{{timestamp}}] {{courses}}',
+    archiveNoticeTitle: '{{timestamp}} | {{courses}}',
     body: 'Schedules for {{code1}} and {{code2}} have been updated to the latest Teaching Plan. Conflicts and calendar events may differ from earlier versions.',
     body7015_7037:
       'Schedules for {{code1}} and {{code2}} have been updated to the latest Teaching Plan. Conflicts and calendar events may differ from earlier versions.',
     body7002_7003:
       '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; Class C tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. Conflicts and calendar events may differ from earlier versions.',
     body7002_7003_7004:
-      '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. {{code3}} one tutorial moved from Nov 19 to Nov 16. Conflicts and calendar events may differ from earlier versions.',
+      '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. {{code3}} one tutorial moved from Nov 19 to Nov 16. See the calendar below for related changes.',
     colCourse: 'Course',
     colClass: 'Class',
     colItem: 'Rescheduled Item',

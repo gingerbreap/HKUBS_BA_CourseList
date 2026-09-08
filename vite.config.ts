@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { execSync } from 'node:child_process'
 
-const APP_VERSION_BASE = '1.4.0'
+const APP_VERSION_BASE = '1.4.8'
 
 function git(command: string): string {
   try {

@@ -152,34 +152,10 @@ export default function ConflictNotices({ conflicts }: ConflictNoticesProps) {
               onClick={() => setExpanded(v => !v)}
             >
               {expanded ? t('conflicts.collapse') : t('conflicts.expand')}
-              <svg
-                className="conflict-alert-toggle-icon"
-                viewBox="0 0 12 12"
-                width="12"
-                height="12"
+              <i
+                className={`fas ${expanded ? 'fa-caret-down' : 'fa-caret-right'} conflict-alert-toggle-icon`}
                 aria-hidden="true"
-                focusable="false"
-              >
-                {expanded ? (
-                  <path
-                    d="M2.2 8.2 6 4.4l3.8 3.8"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ) : (
-                  <path
-                    d="M2.2 3.8 6 7.6l3.8-3.8"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                )}
-              </svg>
+              />
             </button>
           )}
         </div>

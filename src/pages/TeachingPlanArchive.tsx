@@ -40,7 +40,7 @@ export default function TeachingPlanArchive() {
               >
                 <span className="archive-notice-title">{title}</span>
                 <span className="archive-notice-chevron" aria-hidden="true">
-                  {expanded ? '▾' : '▸'}
+                  <i className={expanded ? 'fas fa-caret-down' : 'fas fa-caret-right'} />
                 </span>
               </button>
               {expanded && (

@@ -365,20 +365,30 @@ function NoticeCard({
 
   return (
     <div className={`teaching-plan-notice${expanded ? '' : ' teaching-plan-notice--folded'}`}>
-      <button type="button" className="notice-dismiss-btn" onClick={dismiss}>
-        {t('teachingPlan.dismissRead')}
-      </button>
-      <button
-        type="button"
-        className="teaching-plan-notice-toggle"
-        onClick={() => setExpanded(v => !v)}
-        aria-expanded={expanded}
-      >
-        <span className="teaching-plan-notice-title">{title}</span>
-        <span className="teaching-plan-notice-chevron" aria-hidden="true">
-          {expanded ? '▾' : '▸'}
-        </span>
-      </button>
+      <div className="teaching-plan-notice-header">
+        <button
+          type="button"
+          className="teaching-plan-notice-toggle"
+          onClick={() => setExpanded(v => !v)}
+          aria-expanded={expanded}
+        >
+          <span className="teaching-plan-notice-title">{title}</span>
+        </button>
+        <div className="teaching-plan-notice-header-end">
+          <button
+            type="button"
+            className="teaching-plan-notice-chevron-btn"
+            onClick={() => setExpanded(v => !v)}
+            aria-expanded={expanded}
+            aria-label={title}
+          >
+            <i className={expanded ? 'fas fa-caret-down' : 'fas fa-caret-right'} aria-hidden="true" />
+          </button>
+          <button type="button" className="notice-dismiss-btn" onClick={dismiss}>
+            {t('teachingPlan.dismissRead')}
+          </button>
+        </div>
+      </div>
 
       {expanded && (
         <>
@@ -426,6 +436,8 @@ function NoticeCard({
             {otherGroups.length > 0 && (
               <details className="teaching-plan-impact-others">
                 <summary>
+                  <i className="fas fa-caret-right teaching-plan-impact-others-caret teaching-plan-impact-others-caret--closed" aria-hidden="true" />
+                  <i className="fas fa-caret-down teaching-plan-impact-others-caret teaching-plan-impact-others-caret--open" aria-hidden="true" />
                   {t('teachingPlan.impactOtherUpdates', { count: otherGroups.length })}
                 </summary>
                 <ul className="teaching-plan-impact-list teaching-plan-impact-list--muted">

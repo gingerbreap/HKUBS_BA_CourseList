@@ -331,8 +331,12 @@ a:hover { text-decoration: underline; }
   text-decoration: underline;
 }
 .conflict-alert-toggle-icon {
-  display: block;
+  display: inline-block;
   flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1;
+  width: auto;
+  height: auto;
 }
 
 .notice-dismiss-btn {
@@ -358,6 +362,13 @@ a:hover { text-decoration: underline; }
 .notice-dismiss-btn:hover {
   opacity: 1;
   text-decoration: underline;
+}
+.teaching-plan-notice-header-end .notice-dismiss-btn {
+  position: static;
+  top: auto;
+  right: auto;
+  padding: 0;
+  line-height: 1;
 }
 
 .teaching-plan-section {
@@ -398,14 +409,23 @@ a:hover { text-decoration: underline; }
 .teaching-plan-notice--folded {
   padding-bottom: 12px;
 }
-.teaching-plan-notice-toggle {
+.teaching-plan-notice-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  width: 100%;
+  gap: 10px;
+}
+.teaching-plan-notice-header-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.teaching-plan-notice-toggle {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 0;
-  padding-right: 72px;
   border: none;
   background: transparent;
   text-align: left;
@@ -417,11 +437,19 @@ a:hover { text-decoration: underline; }
   color: #7a5900;
   overflow-wrap: anywhere;
 }
-.teaching-plan-notice-chevron {
-  flex-shrink: 0;
+.teaching-plan-notice-chevron-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: #7a5900;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1;
+  cursor: pointer;
 }
 .teaching-plan-notice-text {
   margin-top: 10px;
@@ -521,6 +549,26 @@ a:hover { text-decoration: underline; }
   cursor: pointer;
   user-select: none;
   font-weight: 600;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.teaching-plan-impact-others summary::-webkit-details-marker {
+  display: none;
+}
+.teaching-plan-impact-others-caret {
+  width: 0.75em;
+  text-align: center;
+}
+.teaching-plan-impact-others-caret--open {
+  display: none;
+}
+.teaching-plan-impact-others[open] .teaching-plan-impact-others-caret--closed {
+  display: none;
+}
+.teaching-plan-impact-others[open] .teaching-plan-impact-others-caret--open {
+  display: inline-block;
 }
 .teaching-plan-impact-actions {
   display: flex;
@@ -909,6 +957,24 @@ a:hover { text-decoration: underline; }
 
 /* Planner calendar */
 .planner-calendar { padding: 16px; margin-bottom: 16px; }
+.calendar-unread-tp-notice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a5900;
+  line-height: 1.45;
+  background: #fff8e1;
+  border: 1px solid #f9ab00;
+  border-radius: 8px;
+}
+.calendar-unread-tp-notice a {
+  color: inherit;
+  text-decoration: none;
+}
+.calendar-unread-tp-notice a:hover {
+  text-decoration: underline;
+}
 .calendar-header {
   display: flex;
   flex-wrap: wrap;
@@ -1151,7 +1217,7 @@ a:hover { text-decoration: underline; }
       #f5f5f5 2px,
       #f5f5f5 5px
     );
-  border: 1px solid #4C5357;
+  border: 1px solid #9aa0a6;
   opacity: 0.85;
 }
 .calendar-legend-swatch--plan-updated {
@@ -1292,7 +1358,7 @@ button.calendar-holiday-label {
 .calendar-event--plan-previous {
   opacity: 0.48;
   color: #5f6368 !important;
-  border-left-color: #4C5357 !important;
+  border-left-color: #9aa0a6 !important;
   background:
     repeating-linear-gradient(
       -45deg,
@@ -1303,7 +1369,6 @@ button.calendar-holiday-label {
     ) !important;
   text-decoration: line-through;
   cursor: default;
-  box-shadow: inset 0 0 0 1px #4C5357;
 }
 .calendar-event--plan-previous:disabled {
   opacity: 0.48;
@@ -1331,6 +1396,7 @@ button.calendar-holiday-label {
 .calendar-event--plan-previous.calendar-event--plan-focused {
   opacity: 0.72;
   filter: none;
+  border-left-color: #4C5357 !important;
   box-shadow:
     0 0 0 2px #4C5357,
     0 0 1.5px 1.5px rgba(76, 83, 87, 0.45),

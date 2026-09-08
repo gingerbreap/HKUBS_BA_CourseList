@@ -139,6 +139,7 @@ const zhHK: TranslationTree = {
   },
   calendar: {
     pageTitle: '我的日曆',
+    unreadTeachingPlan: '⚠️ 目前有{{count}}條未讀的Teaching Plan更新，請注意查看。',
     title: '選課日曆',
     subtitleEmpty: '選擇課程後在此查看排課',
     subtitleCount: '共 {{total}} 項日程 · 本月 {{month}} 項',
@@ -220,19 +221,19 @@ const zhHK: TranslationTree = {
   },
   teachingPlan: {
     title: 'Teaching Plan 更新已同步',
-    titleDated: '[{{timestamp}}] {{courses}}',
+    titleDated: '{{timestamp}} | {{courses}}',
     sectionTitle: '❗️Teaching Plan 更新提示',
     reviewAllUpdates: '回顧所有更新',
     markAllRead: '一鍵已讀',
     dismissRead: '已讀',
     archiveTitle: 'Teaching Plan 更新存檔',
-    archiveNoticeTitle: '[{{timestamp}}] {{courses}}',
+    archiveNoticeTitle: '{{timestamp}} | {{courses}}',
     body: '{{code1}} 與 {{code2}} 的上課安排已按最新 Teaching Plan 更新，你先前看到的時間衝突與日曆內容可能會與舊版本不同。',
     body7015_7037: '{{code1}} 與 {{code2}} 的上課安排已按最新 Teaching Plan 更新，你先前看到的時間衝突與日曆內容可能會與舊版本不同。',
     body7002_7003:
       '{{code2}}（Class C & D）部分講座已取消並改期，Class C 的 Tutorial 時間有調整；{{code1}}（Class A–D）上課時間與課室已更新。日曆與衝突提示可能與舊版本不同。',
     body7002_7003_7004:
-      '{{code2}}（Class C & D）部分講座已取消並改期，Tutorial 時間有調整；{{code1}}（Class A–D）上課時間與課室已更新；{{code3}} 一節 Tutorial 由 Nov 19 改至 Nov 16。日曆與衝突提示可能與舊版本不同。',
+      '{{code2}}（Class C & D）部分講座已取消並改期，Tutorial 時間有調整；{{code1}}（Class A–D）上課時間與課室已更新；{{code3}} 一節 Tutorial 由 Nov 19 改至 Nov 16。可參考下方日曆查看相關改動。',
     colCourse: '課程',
     colClass: '班',
     colItem: '調整項',
