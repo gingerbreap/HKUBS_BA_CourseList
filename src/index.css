@@ -397,7 +397,7 @@ a:hover { text-decoration: underline; }
   line-height: 1.4;
 }
 .teaching-plan-notice-text {
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 13px;
   color: #7a5900;
 }
@@ -407,6 +407,122 @@ a:hover { text-decoration: underline; }
   padding: 1px 5px;
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.teaching-plan-impact {
+  margin-top: 12px;
+  padding: 12px 12px 10px;
+  background: #fffdf5;
+  border: 1px solid #f3d48a;
+  border-radius: 8px;
+}
+.teaching-plan-impact-lead {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #7a5900;
+  line-height: 1.45;
+}
+.teaching-plan-impact-lead--personal {
+  font-weight: 700;
+  color: #5c4400;
+}
+.teaching-plan-impact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.teaching-plan-impact-list--muted {
+  margin-top: 8px;
+  opacity: 0.92;
+}
+.teaching-plan-impact-chip {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #ebd89a;
+  font-size: 12px;
+  color: var(--text);
+}
+.teaching-plan-impact-chip--personal {
+  background: #fff8dc;
+  border-color: #e0c36a;
+}
+/* Lecture A/B/C/D: slightly deeper wash + border than TUT / default */
+.teaching-plan-impact-chip--lec {
+  background: #fff3c4;
+  border-color: #d4b24a;
+}
+.teaching-plan-impact-chip--personal.teaching-plan-impact-chip--lec {
+  background: #ffefb0;
+  border-color: #c9a63a;
+}
+.teaching-plan-impact-chip-code {
+  font-weight: 700;
+}
+.teaching-plan-impact-chip-section {
+  color: #5c4400;
+}
+.teaching-plan-impact-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 1.35em;
+  height: 1.35em;
+  padding: 0 0.28em;
+  margin-left: 2px;
+  border: 1.5px solid #a07820;
+  border-radius: 999px;
+  color: #5c4400;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.teaching-plan-impact-others {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #7a5900;
+}
+.teaching-plan-impact-others summary {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+}
+.teaching-plan-impact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-top: 10px;
+}
+.teaching-plan-mine-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #7a5900;
+  cursor: pointer;
+  user-select: none;
+}
+.teaching-plan-detail-toggle {
+  border: 1px solid #e0c36a;
+  background: #fffdf5;
+  color: #5c4400;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.teaching-plan-detail-toggle:hover {
+  background: #fff3cd;
 }
 .teaching-plan-table-wrap {
   overflow-x: auto;

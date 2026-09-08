@@ -66,7 +66,6 @@ function itemLabel(
 ): string {
   const dateChanged = involvesDateChange(row.previous, row.updated)
 
-  // Dated session items: "Sep 23 时间" — LEC/TUT lives in the Class column
   if (
     row.itemKey === 'sessionVenue'
     || row.itemKey === 'sessionTime'
@@ -81,7 +80,6 @@ function itemLabel(
       return t(timed ? 'teachingPlan.items.sessionVenueTimed' : 'teachingPlan.items.sessionVenue', params)
     }
     if (row.itemKey === 'sessionTime') {
-      // Same-day clock change keeps 时间; cross-day move uses 日期
       if (dateChanged) {
         return timed
           ? t('teachingPlan.items.sessionDateTimed', params)
@@ -100,8 +98,6 @@ function itemLabel(
     )
   }
 
-  // Plain item names — no LEC/TUT prefix (TUT is a Class column value)
-  // Date change: 时间 → 日期, 时间与教室 → 日期与教室
   if (row.itemKey === 'lecTimeVenue' || row.itemKey === 'tutTimeVenue' || row.itemKey === 'timeVenue') {
     return t(dateChanged ? 'teachingPlan.items.dateVenue' : 'teachingPlan.items.timeVenue')
   }
@@ -127,7 +123,6 @@ function itemLabel(
 }
 
 function previousPartsForDisplay(row: TeachingPlanDisplayRow): ChangePart[] {
-  // Date + venue reschedule: Previous only needs the old date/time, not the old venue
   const dateChanged = involvesDateChange(row.previous, row.updated)
   const updatedHasVenue = row.updated.some(p => p.emoji === 'venue')
   if (dateChanged && updatedHasVenue) {
@@ -144,12 +139,193 @@ function buildSelectedSet(selections: SelectedSection[]): Set<string> {
   return new Set(selections.map(s => selectedKey(s.courseCode, s.sectionId)))
 }
 
+function buildSelectedCourses(selections: SelectedSection[]): Set<string> {
+  return new Set(selections.map(s => s.courseCode))
+}
+
+function reflowDisplayFlags(rows: TeachingPlanDisplayRow[]): TeachingPlanDisplayRow[] {
+  let prevCourse: string | null = null
+  let prevSection: string | null = null
+  let prevItemKey: string | null = null
+  let prevItemDate: string | null = null
+  let prevSessionKind: string | null = null
+  let prevItemTime: string | null = null
+
+  return rows.map(row => {
+    const section = row.sectionId ?? ''
+    const itemDate = row.itemDate ?? ''
+    const sessionKind = row.sessionKind ?? ''
+    const itemTime = row.itemTime ?? ''
+    const courseChanged = row.courseCode !== prevCourse
+    const classChanged = courseChanged || section !== prevSection
+    const showCourse = courseChanged
+    const showCourseCode = !courseChanged && classChanged
+    const showClass = classChanged && !!row.sectionId
+    const showItem =
+      classChanged
+      || row.itemKey !== prevItemKey
+      || itemDate !== prevItemDate
+      || sessionKind !== prevSessionKind
+      || itemTime !== prevItemTime
+
+    prevCourse = row.courseCode
+    prevSection = section
+    prevItemKey = row.itemKey
+    prevItemDate = itemDate
+    prevSessionKind = sessionKind
+    prevItemTime = itemTime
+
+    return { ...row, showCourse, showCourseCode, showClass, showItem }
+  })
+}
+
+/** Whether a change row matters for the user's current plan. */
+function rowAffectsUser(
+  row: TeachingPlanDisplayRow,
+  selectedSet: Set<string>,
+  selectedCourses: Set<string>,
+): boolean {
+  if (!row.sectionId) return selectedCourses.has(row.courseCode)
+  if (row.sectionId === 'TUT') return selectedCourses.has(row.courseCode)
+  return selectedSet.has(selectedKey(row.courseCode, row.sectionId))
+}
+
+interface ImpactGroup {
+  key: string
+  courseCode: string
+  courseTitle: string
+  sectionId: string
+  changeCount: number
+  personal: boolean
+}
+
+function buildImpactGroups(
+  rows: TeachingPlanDisplayRow[],
+  selectedSet: Set<string>,
+  selectedCourses: Set<string>,
+): ImpactGroup[] {
+  const map = new Map<string, ImpactGroup>()
+  for (const row of rows) {
+    const sectionId = row.sectionId ?? '—'
+    const key = `${row.courseCode}::${sectionId}`
+    const personal = rowAffectsUser(row, selectedSet, selectedCourses)
+    const existing = map.get(key)
+    if (existing) {
+      existing.changeCount += 1
+      existing.personal = existing.personal || personal
+    } else {
+      map.set(key, {
+        key,
+        courseCode: row.courseCode,
+        courseTitle: row.courseTitle,
+        sectionId,
+        changeCount: 1,
+        personal,
+      })
+    }
+  }
+  return [...map.values()].sort((a, b) => {
+    if (a.personal !== b.personal) return a.personal ? -1 : 1
+    if (a.courseCode !== b.courseCode) return a.courseCode.localeCompare(b.courseCode)
+    return a.sectionId.localeCompare(b.sectionId)
+  })
+}
+
+function sectionLabel(
+  sectionId: string,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
+  if (sectionId === 'TUT') return t('teachingPlan.impactTut')
+  if (sectionId === '—') return ''
+  return t('teachingPlan.impactClass', { id: sectionId })
+}
+
+function ChangeTable({
+  rows,
+  selectedSet,
+  highlightSelected,
+  t,
+}: {
+  rows: TeachingPlanDisplayRow[]
+  selectedSet: Set<string>
+  /** When false (mine-only filter on), skip selected-row tint — all rows are already yours. */
+  highlightSelected: boolean
+  t: (key: string, vars?: Record<string, string | number>) => string
+}) {
+  return (
+    <div className="teaching-plan-table-wrap">
+      <table className="teaching-plan-table">
+        <thead>
+          <tr>
+            <th>{t('teachingPlan.colCourse')}</th>
+            <th>{t('teachingPlan.colClass')}</th>
+            <th>{t('teachingPlan.colItem')}</th>
+            <th>{t('teachingPlan.colOld')}</th>
+            <th>{t('teachingPlan.colNew')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(row => {
+            const isSelectedClass = !!(
+              highlightSelected
+              && row.sectionId
+              && row.sectionId !== 'TUT'
+              && selectedSet.has(selectedKey(row.courseCode, row.sectionId))
+            )
+            return (
+              <tr
+                key={row.key}
+                className={isSelectedClass ? 'teaching-plan-row--selected' : undefined}
+              >
+                <td>
+                  {row.showCourse ? (
+                    <>
+                      <div className="teaching-plan-course-code">{row.courseCode}</div>
+                      <div className="teaching-plan-course-title">{row.courseTitle}</div>
+                    </>
+                  ) : row.showCourseCode ? (
+                    <div className="teaching-plan-course-code">{row.courseCode}</div>
+                  ) : null}
+                </td>
+                <td className={isSelectedClass ? 'teaching-plan-class--selected' : undefined}>
+                  {row.showClass ? (row.sectionId ?? '') : null}
+                </td>
+                <td>{row.showItem ? itemLabel(row, t) : null}</td>
+                <td className="teaching-plan-old-cell">
+                  <ChangeCell parts={previousPartsForDisplay(row)} hideTimeEmoji />
+                </td>
+                <td className="teaching-plan-new-cell">
+                  <ChangeCell parts={row.updated} />
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function impactChipClass(sectionId: string, personal: boolean): string {
+  const parts = ['teaching-plan-impact-chip']
+  if (personal) parts.push('teaching-plan-impact-chip--personal')
+  // Deeper wash only in "affects you"; "other updates" stay white
+  if (personal && sectionId !== 'TUT' && sectionId !== '—') {
+    parts.push('teaching-plan-impact-chip--lec')
+  }
+  return parts.join(' ')
+}
+
 function NoticeCard({
   notice,
   selectedSet,
+  selectedCourses,
+  hasAnySelection,
 }: {
   notice: TeachingPlanNotice
   selectedSet: Set<string>
+  selectedCourses: Set<string>
+  hasAnySelection: boolean
 }) {
   const { t } = useI18n()
   const version = notice.updates.map(u => u.courseCode).join('+')
@@ -159,7 +335,27 @@ function NoticeCard({
     `msba:dismiss-teaching-plan-${notice.id}`,
   )
   const [expanded, setExpanded] = useState(notice.defaultExpanded)
-  const displayRows = buildDisplayRows(notice)
+  const displayRows = useMemo(() => buildDisplayRows(notice), [notice])
+  const impactGroups = useMemo(
+    () => buildImpactGroups(displayRows, selectedSet, selectedCourses),
+    [displayRows, selectedSet, selectedCourses],
+  )
+  const personalGroups = impactGroups.filter(g => g.personal)
+  const otherGroups = impactGroups.filter(g => !g.personal)
+  const personalCount = personalGroups.reduce((n, g) => n + g.changeCount, 0)
+
+  // Plan A default: focus on "does this affect me?"
+  const [mineOnly, setMineOnly] = useState(true)
+  const [showDetailTable, setShowDetailTable] = useState(false)
+
+  const canFilterMine = personalCount > 0
+  const effectiveMineOnly = canFilterMine && mineOnly
+  const visibleRows = useMemo(() => {
+    const filtered = effectiveMineOnly
+      ? displayRows.filter(row => rowAffectsUser(row, selectedSet, selectedCourses))
+      : displayRows
+    return reflowDisplayFlags(filtered)
+  }, [displayRows, effectiveMineOnly, selectedSet, selectedCourses])
 
   if (dismissed) return null
 
@@ -187,59 +383,105 @@ function NoticeCard({
 
       {expanded && (
         <>
+          {/* Adjustment summary sits above personal impact chips */}
           <div className="teaching-plan-notice-text">
             {t(`teachingPlan.${notice.bodyKey}`, notice.bodyParams)}
           </div>
 
-          <div className="teaching-plan-table-wrap">
-            <table className="teaching-plan-table">
-              <thead>
-                <tr>
-                  <th>{t('teachingPlan.colCourse')}</th>
-                  <th>{t('teachingPlan.colClass')}</th>
-                  <th>{t('teachingPlan.colItem')}</th>
-                  <th>{t('teachingPlan.colOld')}</th>
-                  <th>{t('teachingPlan.colNew')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayRows.map(row => {
-                  const isSelectedClass = !!(
-                    row.sectionId
-                    && row.sectionId !== 'TUT'
-                    && selectedSet.has(selectedKey(row.courseCode, row.sectionId))
-                  )
-                  return (
-                    <tr
-                      key={row.key}
-                      className={isSelectedClass ? 'teaching-plan-row--selected' : undefined}
+          {/* Plan A — Layer 1: impact summary */}
+          <div className="teaching-plan-impact">
+            {canFilterMine ? (
+              <p className="teaching-plan-impact-lead teaching-plan-impact-lead--personal">
+                {t('teachingPlan.impactAffectsYou', { count: personalCount })}
+              </p>
+            ) : hasAnySelection ? (
+              <p className="teaching-plan-impact-lead">
+                {t('teachingPlan.impactNotAffected')}
+              </p>
+            ) : (
+              <p className="teaching-plan-impact-lead">
+                {t('teachingPlan.impactNoSelection')}
+              </p>
+            )}
+
+            {personalGroups.length > 0 && (
+              <ul className="teaching-plan-impact-list">
+                {personalGroups.map(g => (
+                  <li key={g.key} className={impactChipClass(g.sectionId, true)}>
+                    <span className="teaching-plan-impact-chip-code">{g.courseCode}</span>
+                    <span className="teaching-plan-impact-chip-section">
+                      {sectionLabel(g.sectionId, t)}
+                    </span>
+                    <span
+                      className="teaching-plan-impact-chip-count"
+                      title={t('teachingPlan.impactChangeCount', { count: g.changeCount })}
+                      aria-label={t('teachingPlan.impactChangeCount', { count: g.changeCount })}
                     >
-                      <td>
-                        {row.showCourse ? (
-                          <>
-                            <div className="teaching-plan-course-code">{row.courseCode}</div>
-                            <div className="teaching-plan-course-title">{row.courseTitle}</div>
-                          </>
-                        ) : row.showCourseCode ? (
-                          <div className="teaching-plan-course-code">{row.courseCode}</div>
-                        ) : null}
-                      </td>
-                      <td className={isSelectedClass ? 'teaching-plan-class--selected' : undefined}>
-                        {row.showClass ? (row.sectionId ?? '') : null}
-                      </td>
-                      <td>{row.showItem ? itemLabel(row, t) : null}</td>
-                      <td className="teaching-plan-old-cell">
-                        <ChangeCell parts={previousPartsForDisplay(row)} hideTimeEmoji />
-                      </td>
-                      <td className="teaching-plan-new-cell">
-                        <ChangeCell parts={row.updated} />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                      {g.changeCount}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {otherGroups.length > 0 && (
+              <details className="teaching-plan-impact-others">
+                <summary>
+                  {t('teachingPlan.impactOtherUpdates', { count: otherGroups.length })}
+                </summary>
+                <ul className="teaching-plan-impact-list teaching-plan-impact-list--muted">
+                  {otherGroups.map(g => (
+                    <li key={g.key} className={impactChipClass(g.sectionId, false)}>
+                      <span className="teaching-plan-impact-chip-code">{g.courseCode}</span>
+                      <span className="teaching-plan-impact-chip-section">
+                        {sectionLabel(g.sectionId, t)}
+                      </span>
+                      <span
+                        className="teaching-plan-impact-chip-count"
+                        title={t('teachingPlan.impactChangeCount', { count: g.changeCount })}
+                        aria-label={t('teachingPlan.impactChangeCount', { count: g.changeCount })}
+                      >
+                        {g.changeCount}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
           </div>
+
+          <div className="teaching-plan-impact-actions">
+            {canFilterMine && (
+              <label className="teaching-plan-mine-toggle">
+                <input
+                  type="checkbox"
+                  checked={mineOnly}
+                  onChange={e => setMineOnly(e.target.checked)}
+                />
+                {t('teachingPlan.showOnlyMine')}
+              </label>
+            )}
+            <button
+              type="button"
+              className="teaching-plan-detail-toggle"
+              onClick={() => setShowDetailTable(v => !v)}
+              aria-expanded={showDetailTable}
+            >
+              {showDetailTable
+                ? t('teachingPlan.hideDetailTable')
+                : t('teachingPlan.showDetailTable')}
+            </button>
+          </div>
+
+          {/* Plan A — Layer 2: full diff table (opt-in) */}
+          {showDetailTable && (
+            <ChangeTable
+              rows={visibleRows}
+              selectedSet={selectedSet}
+              highlightSelected={!effectiveMineOnly}
+              t={t}
+            />
+          )}
         </>
       )}
     </div>
@@ -252,11 +494,18 @@ export default function TeachingPlanUpdateNotice({
   selections: SelectedSection[]
 }) {
   const selectedSet = useMemo(() => buildSelectedSet(selections), [selections])
+  const selectedCourses = useMemo(() => buildSelectedCourses(selections), [selections])
 
   return (
     <>
       {teachingPlanNotices.map(notice => (
-        <NoticeCard key={notice.id} notice={notice} selectedSet={selectedSet} />
+        <NoticeCard
+          key={notice.id}
+          notice={notice}
+          selectedSet={selectedSet}
+          selectedCourses={selectedCourses}
+          hasAnySelection={selections.length > 0}
+        />
       ))}
     </>
   )
