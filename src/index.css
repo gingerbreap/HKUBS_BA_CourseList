@@ -360,6 +360,33 @@ a:hover { text-decoration: underline; }
   text-decoration: underline;
 }
 
+.teaching-plan-section {
+  margin-bottom: 8px;
+}
+.teaching-plan-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.teaching-plan-section-title {
+  margin: 20px 0 8px;
+}
+.teaching-plan-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.teaching-plan-section-btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
 .teaching-plan-notice {
   position: relative;
   background: #fff8e1;
@@ -957,6 +984,9 @@ a:hover { text-decoration: underline; }
   color: var(--text-secondary);
   margin-bottom: 12px;
 }
+.calendar-legend--plan {
+  margin-top: -4px;
+}
 .calendar-legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .calendar-legend-swatch {
   display: inline-block;
@@ -968,7 +998,7 @@ a:hover { text-decoration: underline; }
 .calendar-legend-swatch--holiday { background: #fce8e6; border-color: #f5c6c2; }
 .calendar-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
   margin-bottom: 4px;
 }
@@ -981,11 +1011,14 @@ a:hover { text-decoration: underline; }
 }
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
+  isolation: isolate;
 }
 .calendar-day {
   min-height: 88px;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 4px;
@@ -993,6 +1026,12 @@ a:hover { text-decoration: underline; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  z-index: 0;
+}
+.calendar-day--focus-raise {
+  overflow: visible;
+  z-index: 6;
 }
 .calendar-day--other { opacity: 0.45; background: #fafafa; }
 .calendar-day--holiday { background: #fff8f7; border-color: #f5c6c2; }
@@ -1112,13 +1151,13 @@ a:hover { text-decoration: underline; }
       #f5f5f5 2px,
       #f5f5f5 5px
     );
-  border: 1px solid #9aa0a6;
+  border: 1px solid #4C5357;
   opacity: 0.85;
 }
 .calendar-legend-swatch--plan-updated {
-  background: #e8f0fe;
-  border: 1px solid #1a73e8;
-  box-shadow: inset 0 0 0 1px rgba(26, 115, 232, 0.25);
+  background: #fff4ee;
+  border: 1px solid #D74E09;
+  box-shadow: inset 0 0 0 1px rgba(215, 78, 9, 0.2);
 }
 .calendar-day-header {
   display: flex;
@@ -1199,10 +1238,16 @@ button.calendar-holiday-label {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  min-width: 0;
+}
+.calendar-day--focus-raise .calendar-day-events {
+  overflow: visible;
 }
 .calendar-event {
   display: block;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   border: none;
   border-radius: 4px;
   padding: 2px 4px;
@@ -1247,7 +1292,7 @@ button.calendar-holiday-label {
 .calendar-event--plan-previous {
   opacity: 0.48;
   color: #5f6368 !important;
-  border-left-color: #9aa0a6 !important;
+  border-left-color: #4C5357 !important;
   background:
     repeating-linear-gradient(
       -45deg,
@@ -1258,6 +1303,7 @@ button.calendar-holiday-label {
     ) !important;
   text-decoration: line-through;
   cursor: default;
+  box-shadow: inset 0 0 0 1px #4C5357;
 }
 .calendar-event--plan-previous:disabled {
   opacity: 0.48;
@@ -1265,25 +1311,30 @@ button.calendar-holiday-label {
 }
 /* Current session that was moved/rescheduled — light cue, no day-cell paint */
 .calendar-event--plan-updated {
-  box-shadow: inset 0 0 0 1px rgba(26, 115, 232, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(215, 78, 9, 0.65);
 }
 .calendar-event--plan-focused {
   position: relative;
-  z-index: 2;
+  z-index: 8;
   transform: scale(1.08);
+  transform-origin: center center;
   box-shadow:
-    0 0 0 2px rgba(26, 115, 232, 0.85),
-    0 0 14px rgba(26, 115, 232, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.12);
+    0 0 0 2px #D74E09,
+    0 0 1.5px 1.5px rgba(215, 78, 9, 0.55),
+    0 0 12px rgba(215, 78, 9, 0.4);
   filter: brightness(1.04);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
 }
 .calendar-event--plan-previous.calendar-event--plan-focused {
   opacity: 0.72;
   filter: none;
   box-shadow:
-    0 0 0 2px rgba(95, 99, 104, 0.75),
-    0 0 12px rgba(95, 99, 104, 0.35),
-    0 2px 6px rgba(0, 0, 0, 0.1);
+    0 0 0 2px #4C5357,
+    0 0 1.5px 1.5px rgba(76, 83, 87, 0.45),
+    0 0 10px rgba(76, 83, 87, 0.32);
 }
 .calendar-event-plan-badge {
   display: block;
@@ -1296,7 +1347,7 @@ button.calendar-holiday-label {
   margin-bottom: 1px;
 }
 .calendar-event-plan-badge--updated {
-  color: #174ea6;
+  color: #D74E09;
   text-decoration: none;
 }
 .calendar-event-type {

@@ -3,6 +3,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import IcsExportModal from './IcsExportModal'
@@ -160,7 +161,8 @@ function EventChip({
         focused && 'calendar-event--plan-focused',
       ].filter(Boolean).join(' ')}
       title={title}
-      onClick={() => {
+      onClick={e => {
+        e.stopPropagation()
         if (isPrevious) return
         onCourseClick?.(event.courseCode)
       }}
@@ -328,6 +330,19 @@ export default function PlannerCalendar({
   const [activeHolidayBubble, setActiveHolidayBubble] = useState<string | null>(null)
   /** null = default (no change focused); 0 = earliest; last = latest */
   const [focusIndex, setFocusIndex] = useState<number | null>(null)
+  /** Glow/scale only after month jump (if any) has painted */
+  const [focusHighlightActive, setFocusHighlightActive] = useState(false)
+  const [pendingFocusHighlight, setPendingFocusHighlight] = useState(false)
+  const focusHighlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearFocusHighlightTimer = () => {
+    if (focusHighlightTimerRef.current !== null) {
+      clearTimeout(focusHighlightTimerRef.current)
+      focusHighlightTimerRef.current = null
+    }
+  }
+
+  useEffect(() => () => clearFocusHighlightTimer(), [])
 
   const unreadNoticeIds = useUnreadTeachingPlanNoticeIds()
 
@@ -352,6 +367,8 @@ export default function PlannerCalendar({
     if (focusIndex === null) return
     if (displayEvents.changes.length === 0) {
       setFocusIndex(null)
+      setFocusHighlightActive(false)
+      setPendingFocusHighlight(false)
       return
     }
     if (focusIndex >= displayEvents.changes.length) {
@@ -359,8 +376,35 @@ export default function PlannerCalendar({
     }
   }, [displayEvents.changes.length, focusIndex])
 
+  // After a month jump for focus nav, wait until the new grid is painted before glow/scale
+  useEffect(() => {
+    if (!pendingFocusHighlight || focusIndex === null) return
+    let cancelled = false
+    const enable = () => {
+      if (cancelled) return
+      setFocusHighlightActive(true)
+      setPendingFocusHighlight(false)
+    }
+    // Double rAF ≈ after layout; short timeout covers slower paint
+    let raf2 = 0
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        clearFocusHighlightTimer()
+        focusHighlightTimerRef.current = setTimeout(enable, 40)
+      })
+    })
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
+      clearFocusHighlightTimer()
+    }
+  }, [year, month, pendingFocusHighlight, focusIndex])
+
   const byDate = useMemo(() => eventsByDate(displayEvents.events), [displayEvents.events])
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month])
+  /** All date keys actually rendered in this month grid (incl. spillover days). */
+  const visibleDateKeys = useMemo(() => new Set(grid.map(c => c.dateKey)), [grid])
 
   const holidayFullLabel = (labelKey: string) => t(`holidaysFull.${labelKey}`)
 
@@ -387,8 +431,24 @@ export default function PlannerCalendar({
   const focusChange = (index: number) => {
     const change = displayEvents.changes[index]
     if (!change) return
+    clearFocusHighlightTimer()
+    // Drop glow immediately so it never animates on the old month
+    setFocusHighlightActive(false)
+
+    const target = monthFromDateKey(change.sortDate)
+    const needsMonthJump = !!(
+      target
+      && (target.year !== year || target.month !== month)
+    )
+
     setFocusIndex(index)
-    jumpMonthToDate(change.sortDate)
+    if (needsMonthJump && target) {
+      setPendingFocusHighlight(true)
+      setView(target)
+    } else {
+      setPendingFocusHighlight(false)
+      setFocusHighlightActive(true)
+    }
   }
 
   const goEarliest = () => {
@@ -418,6 +478,13 @@ export default function PlannerCalendar({
   const focusedChange: PlanChange | null =
     focusIndex !== null ? displayEvents.changes[focusIndex] ?? null : null
   const focusedChangeId = focusedChange?.id ?? null
+  const highlightChangeId =
+    focusHighlightActive && focusedChangeId ? focusedChangeId : null
+  /** Only related dates that fall outside the current month grid need a jump hint. */
+  const hiddenRelatedDates = useMemo(() => {
+    if (!focusedChange) return []
+    return focusedChange.relatedDates.filter(d => !visibleDateKeys.has(d))
+  }, [focusedChange, visibleDateKeys])
 
   const monthLabel = t('calendar.monthLabel', { year, month: month + 1 })
   const monthEventCount = events.filter(e => {
@@ -430,20 +497,33 @@ export default function PlannerCalendar({
   }
 
   const showPlanBanner = displayEvents.previousCount > 0 || displayEvents.updatedCount > 0
-  const dismissLabel = t('common.dismiss')
+  const dismissLabel = t('teachingPlan.dismissRead')
   const canPrev = focusIndex !== null && focusIndex > 0
   const canNext = displayEvents.changes.length > 0 && (
     focusIndex === null || focusIndex < displayEvents.changes.length - 1
   )
-  const showRelatedFooter = !!(focusedChange && focusedChange.spansMonths)
+  const showRelatedFooter = hiddenRelatedDates.length > 0
 
   const formatRelatedDay = (dateKey: string) => {
     const [, m, d] = dateKey.split('-').map(Number)
     return t('calendar.planUpdateRelatedDay', { month: m, day: d })
   }
 
+  const clearFocusHighlight = () => {
+    clearFocusHighlightTimer()
+    setFocusHighlightActive(false)
+    setPendingFocusHighlight(false)
+  }
+
+  const onCalendarCardClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, select, textarea')) return
+    setActiveHolidayBubble(null)
+    clearFocusHighlight()
+  }
+
   return (
-    <div className="card planner-calendar">
+    <div className="card planner-calendar" onClick={onCalendarCardClick}>
       <div className="calendar-header">
         <div className="calendar-header-text">
           <div className="calendar-title">{t('calendar.title')}</div>
@@ -533,17 +613,17 @@ export default function PlannerCalendar({
         <span className="calendar-legend-item">
           <span className="calendar-legend-swatch calendar-legend-swatch--holiday" /> {t('calendar.legendHoliday')}
         </span>
-        {showPlanBanner && (
-          <>
-            <span className="calendar-legend-item">
-              <span className="calendar-legend-swatch calendar-legend-swatch--plan-previous" /> {t('calendar.legendPlanPrevious')}
-            </span>
-            <span className="calendar-legend-item">
-              <span className="calendar-legend-swatch calendar-legend-swatch--plan-updated" /> {t('calendar.legendPlanUpdated')}
-            </span>
-          </>
-        )}
       </div>
+      {showPlanBanner && (
+        <div className="calendar-legend calendar-legend--plan">
+          <span className="calendar-legend-item">
+            <span className="calendar-legend-swatch calendar-legend-swatch--plan-previous" /> {t('calendar.legendPlanPrevious')}
+          </span>
+          <span className="calendar-legend-item">
+            <span className="calendar-legend-swatch calendar-legend-swatch--plan-updated" /> {t('calendar.legendPlanUpdated')}
+          </span>
+        </div>
+      )}
 
       <div className="calendar-weekdays">
         {weekdays.map(d => (
@@ -551,13 +631,17 @@ export default function PlannerCalendar({
         ))}
       </div>
 
-      <div className="calendar-grid" onClick={() => setActiveHolidayBubble(null)}>
+      <div className="calendar-grid">
         {grid.map(cell => {
           const dayEvents = byDate[cell.dateKey] || []
           const holidayKey = holidayLabelKey(cell.dateKey)
           const label = holidayKey ? t(`holidays.${holidayKey}`) : undefined
           const fullLabel = holidayKey ? holidayFullLabel(holidayKey) : undefined
           const lunarTag = holidayLunarTag(cell.dateKey)
+          const dayHasFocus = !!(
+            highlightChangeId
+            && dayEvents.some(ev => ev.planChangeId === highlightChangeId)
+          )
 
           return (
             <div
@@ -567,6 +651,7 @@ export default function PlannerCalendar({
                 !cell.inMonth && 'calendar-day--other',
                 holidayKey && 'calendar-day--holiday',
                 dayEvents.length > 0 && 'calendar-day--has-events',
+                dayHasFocus && 'calendar-day--focus-raise',
               ].filter(Boolean).join(' ')}
             >
               <div className="calendar-day-header">
@@ -596,7 +681,7 @@ export default function PlannerCalendar({
                   <EventChip
                     key={ev.id}
                     event={ev}
-                    focused={!!focusedChangeId && ev.planChangeId === focusedChangeId}
+                    focused={!!highlightChangeId && ev.planChangeId === highlightChangeId}
                     onCourseClick={onCourseClick}
                     sectionLabel={sectionLabel}
                   />
@@ -607,12 +692,12 @@ export default function PlannerCalendar({
         })}
       </div>
 
-      {showRelatedFooter && focusedChange && (
+      {showRelatedFooter && (
         <div className="calendar-plan-related-footer">
           <span className="calendar-plan-related-label">
             {t('calendar.planUpdateRelatedDates')}
           </span>
-          {focusedChange.relatedDates.map((dateKey, i) => (
+          {hiddenRelatedDates.map((dateKey, i) => (
             <span key={dateKey} className="calendar-plan-related-item">
               {i > 0 && (
                 <button

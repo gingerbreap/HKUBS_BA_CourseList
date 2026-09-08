@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   buildDisplayRows,
   teachingPlanNotices,
@@ -7,9 +8,11 @@ import {
   type TeachingPlanNotice,
 } from '../data/teachingPlanUpdates'
 import { usePersistentDismiss } from '../hooks/usePersistentDismiss'
+import { useUnreadTeachingPlanNoticeIds } from '../hooks/useUnreadTeachingPlanNoticeIds'
 import { useI18n } from '../i18n/context'
 import type { SelectedSection } from '../types'
 import {
+  dismissAllTeachingPlanNotices,
   teachingPlanDismissEventName,
   teachingPlanDismissStorageKey,
   teachingPlanDismissVersion,
@@ -363,7 +366,7 @@ function NoticeCard({
   return (
     <div className={`teaching-plan-notice${expanded ? '' : ' teaching-plan-notice--folded'}`}>
       <button type="button" className="notice-dismiss-btn" onClick={dismiss}>
-        {t('common.dismiss')}
+        {t('teachingPlan.dismissRead')}
       </button>
       <button
         type="button"
@@ -489,12 +492,33 @@ export default function TeachingPlanUpdateNotice({
 }: {
   selections: SelectedSection[]
 }) {
+  const { t } = useI18n()
+  const unreadIds = useUnreadTeachingPlanNoticeIds()
   const selectedSet = useMemo(() => buildSelectedSet(selections), [selections])
   const selectedCourses = useMemo(() => buildSelectedCourses(selections), [selections])
 
+  if (unreadIds.size === 0) return null
+
+  const visibleNotices = teachingPlanNotices.filter(n => unreadIds.has(n.id))
+
   return (
-    <>
-      {teachingPlanNotices.map(notice => (
+    <section className="teaching-plan-section" aria-label={t('teachingPlan.sectionTitle')}>
+      <div className="teaching-plan-section-header">
+        <h1 className="page-title teaching-plan-section-title">{t('teachingPlan.sectionTitle')}</h1>
+        <div className="teaching-plan-section-actions">
+          <Link to="/archive/teaching-plan" className="alt-btn teaching-plan-section-btn">
+            {t('teachingPlan.reviewAllUpdates')}
+          </Link>
+          <button
+            type="button"
+            className="select-btn teaching-plan-section-btn"
+            onClick={dismissAllTeachingPlanNotices}
+          >
+            {t('teachingPlan.markAllRead')}
+          </button>
+        </div>
+      </div>
+      {visibleNotices.map(notice => (
         <NoticeCard
           key={notice.id}
           notice={notice}
@@ -503,6 +527,6 @@ export default function TeachingPlanUpdateNotice({
           hasAnySelection={selections.length > 0}
         />
       ))}
-    </>
+    </section>
   )
 }

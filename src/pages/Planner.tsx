@@ -143,6 +143,8 @@ export default function Planner() {
 
   return (
     <div>
+      <TeachingPlanUpdateNotice selections={selections} />
+
       <h1 className="page-title">{t('planner.title')}</h1>
 
       <div className="planner-stats">
@@ -192,10 +194,6 @@ export default function Planner() {
         </div>
       )}
 
-      <TeachingPlanUpdateNotice selections={selections} />
-
-      <ConflictNotices conflicts={conflicts} />
-
       {duplicateMsg && (
         <div className="planner-toast" role="status">{duplicateMsg}</div>
       )}
@@ -207,6 +205,8 @@ export default function Planner() {
         onImportSelections={replace}
         onCourseClick={setDetailCode}
       />
+
+      <ConflictNotices conflicts={conflicts} />
 
       <div className="tabs">
         <button className={`tab ${tab === 'selected' ? 'active' : ''}`} onClick={() => setTab('selected')}>

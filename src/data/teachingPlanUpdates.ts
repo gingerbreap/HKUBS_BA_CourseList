@@ -143,7 +143,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
   {
     id: '20260903-7002-7003',
     timestamp: '2026/09/03 17:23',
-    courseRefs: '7002, 7003 & 7004',
+    courseRefs: '7002, 7003, 7004',
     bodyKey: 'body7002_7003_7004',
     bodyParams: { code1: 'MSBA7002', code2: 'MSBA7003', code3: 'MSBA7004' },
     defaultExpanded: true,
@@ -319,7 +319,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
   {
     id: '20260818-7015-7037',
     timestamp: '2026/08/18 17:10',
-    courseRefs: '7015 & 7037',
+    courseRefs: '7015, 7037',
     bodyKey: 'body7015_7037',
     bodyParams: { code1: 'MSBA7015', code2: 'MSBA7037' },
     defaultExpanded: false,

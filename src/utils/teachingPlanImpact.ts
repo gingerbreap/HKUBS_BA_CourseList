@@ -60,10 +60,8 @@ function inferSessionType(row: TeachingPlanDisplayRow): CalendarSessionType {
   return 'lecture'
 }
 
-function displaySectionId(row: TeachingPlanDisplayRow, selections: SelectedSection[]): string {
-  if (row.sectionId && row.sectionId !== 'TUT') return row.sectionId
-  const hit = selections.find(s => s.courseCode === row.courseCode)
-  return hit?.sectionId ?? (row.sectionId === 'TUT' ? 'TUT' : '')
+function displaySectionId(row: TeachingPlanDisplayRow): string {
+  return row.sectionId && row.sectionId !== '—' ? row.sectionId : ''
 }
 
 function uniqueInOrder(dates: string[]): string[] {
@@ -75,10 +73,6 @@ function uniqueInOrder(dates: string[]): string[] {
     out.push(d)
   }
   return out
-}
-
-function yearMonth(date: string): string {
-  return date.slice(0, 7)
 }
 
 function collectRowDates(row: TeachingPlanDisplayRow): {
@@ -137,14 +131,13 @@ export interface PlanChange {
   noticeId: string
   courseCode: string
   sectionId: string
+  sessionType: CalendarSessionType
   previousDates: string[]
   updatedDates: string[]
-  /** Previous→updated unique dates for footer (not necessarily chronological) */
+  /** Previous→updated unique dates (for off-view jump hints) */
   relatedDates: string[]
   /** Earliest related date — used for sort order and default month jump */
   sortDate: string
-  /** True when related dates cover >1 month, cross prev/updated months, or multi-date */
-  spansMonths: boolean
 }
 
 export interface PlanImpactMeta {
@@ -176,26 +169,18 @@ export function buildPlanChanges(
       const relatedDates = uniqueInOrder([...previousDates, ...updatedDates])
       if (relatedDates.length === 0) continue
 
-      const months = new Set(relatedDates.map(yearMonth))
-      const prevMonths = new Set(previousDates.map(yearMonth))
-      const updMonths = new Set(updatedDates.map(yearMonth))
-      const crossPrevUpd =
-        previousDates.length > 0
-        && updatedDates.length > 0
-        && [...prevMonths].some(m => !updMonths.has(m))
-
       const sortDate = uniqueSorted(relatedDates)[0]
 
       changes.push({
         id: row.key,
         noticeId: notice.id,
         courseCode: row.courseCode,
-        sectionId: displaySectionId(row, selections),
+        sectionId: displaySectionId(row),
+        sessionType: inferSessionType(row),
         previousDates,
         updatedDates,
         relatedDates,
         sortDate,
-        spansMonths: months.size > 1 || crossPrevUpd || relatedDates.length > 1,
       })
     }
   }
@@ -230,7 +215,7 @@ export function buildPlanPreviousEvents(
         c.courseCode === row.courseCode && (!sel || c.module === sel.module),
       ) ?? courses.find(c => c.courseCode === row.courseCode)
 
-      const sectionId = displaySectionId(row, selections)
+      const sectionId = displaySectionId(row)
       const sessionType = inferSessionType(row)
       const module = course?.module ?? sel?.module ?? 0
       const courseTitle = course?.courseTitle ?? row.courseTitle
@@ -348,19 +333,22 @@ export function annotateUpdatedEvents(
     }
   }
 
-  // Prefer section-specific match, then course|date
-  const byCourseSectionDate = new Map<string, string>()
-  const byCourseDate = new Map<string, string>()
+  // Match live events by session kind so a TUT move does not outline a lecture
+  // that happens to share the same calendar day.
+  const byCourseSectionTypeDate = new Map<string, string>()
+  const byCourseTypeDate = new Map<string, string>()
 
   for (const change of changes) {
     for (const date of change.updatedDates) {
       updatedDates.add(date)
-      byCourseSectionDate.set(
-        `${change.courseCode}|${change.sectionId}|${date}`,
-        change.id,
-      )
-      if (!byCourseDate.has(`${change.courseCode}|${date}`)) {
-        byCourseDate.set(`${change.courseCode}|${date}`, change.id)
+      const typeKey = `${change.courseCode}|${change.sessionType}|${date}`
+      if (change.sectionId && change.sectionId !== 'TUT') {
+        byCourseSectionTypeDate.set(
+          `${change.courseCode}|${change.sectionId}|${change.sessionType}|${date}`,
+          change.id,
+        )
+      } else if (!byCourseTypeDate.has(typeKey)) {
+        byCourseTypeDate.set(typeKey, change.id)
       }
     }
     for (const date of change.previousDates) previousDates.add(date)
@@ -369,10 +357,10 @@ export function annotateUpdatedEvents(
   let updatedEventCount = 0
   const annotated = events.map(ev => {
     if (ev.planRevision === 'previous') return ev
-    const sectionKey = `${ev.courseCode}|${ev.sectionId}|${ev.date}`
-    const courseKey = `${ev.courseCode}|${ev.date}`
+    const sectionKey = `${ev.courseCode}|${ev.sectionId}|${ev.sessionType}|${ev.date}`
+    const typeKey = `${ev.courseCode}|${ev.sessionType}|${ev.date}`
     const planChangeId =
-      byCourseSectionDate.get(sectionKey) ?? byCourseDate.get(courseKey)
+      byCourseSectionTypeDate.get(sectionKey) ?? byCourseTypeDate.get(typeKey)
     if (planChangeId) {
       updatedEventCount += 1
       return { ...ev, planRevision: 'updated' as const, planChangeId }

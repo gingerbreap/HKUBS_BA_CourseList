@@ -5,6 +5,7 @@ import Timetable from './pages/Timetable'
 import Planner from './pages/Planner'
 import CourseDetail from './pages/CourseDetail'
 import Requirements from './pages/Requirements'
+import TeachingPlanArchive from './pages/TeachingPlanArchive'
 import { useI18n } from './i18n/context'
 import { trackPageView } from './utils/analytics'
 
@@ -59,6 +60,7 @@ function App() {
           <Route path="/courselist" element={<Timetable />} />
           <Route path="/course/:courseCode" element={<CourseDetail />} />
           <Route path="/requirements" element={<Requirements />} />
+          <Route path="/archive/teaching-plan" element={<TeachingPlanArchive />} />
         </Routes>
         <footer className="site-footer">
           <p className="site-footer-credit">{t('footer.credit')}</p>
