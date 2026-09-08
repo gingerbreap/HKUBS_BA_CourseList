@@ -12,14 +12,29 @@ const en: TranslationTree = {
   },
   nav: {
     brand: 'HKU MSc(BA) Course Planner',
+    calendar: 'My Calendar',
     planner: 'My Plan',
     timetable: 'Module Timetable',
     requirements: 'Requirements',
+    about: 'About',
+  },
+  about: {
+    versionLabel: 'Current version: ',
+    syncLabel: 'Data last updated: ',
+    tzHkt: 'HKT',
+    tzLocal: 'Local',
+    githubAria: 'View this project on GitHub',
+    menuLabel: 'About menu',
+    menuArchive: 'Teaching Plan update archive',
+    menuDefaultPage: 'Default page',
+    defaultPageTitle: 'Default page',
+    defaultPageLegend: 'Open this site on',
+    backToAbout: '← Back to About',
   },
   footer: {
     credit: 'Built by 缄默姜饼, with technical support from Cursor, Google Analytics and Cloudflare.',
     disclaimer1:
-      'Timetable data is sourced from the MSc(BA) Programme Office Teaching Plan 2026-27. Graduation and stream requirements are sourced from the programme website and Curriculum Requirements for Concentrations. Last verified against Programme Office materials: 3 Sep 2026, 17:23 HKT. All content is provided as-is.',
+      'Timetable data is sourced from the MSc(BA) Programme Office Teaching Plan 2026-27. Graduation and stream requirements are sourced from the programme website and Curriculum Requirements for Concentrations. For the last sync/verification time against Programme Office materials, see the About page. All content is provided as-is.',
     disclaimer2:
       'This tool does not represent the official position, guarantees, or commitments of the University of Hong Kong or the Faculty of Business and Economics. Schedules, assessments, times, and graduation requirements may change at any time. Users must understand that the information provided may already be outdated after the sync/verification time stated above, and should verify facts through official channels, the Teaching Plan, and the Programme Office before making enrolment decisions independently. The developer is not liable for enrolment outcomes, undetected conflicts, graduation progress, or other consequences of using this site.',
     disclaimer3:
@@ -123,6 +138,7 @@ const en: TranslationTree = {
     ],
   },
   calendar: {
+    pageTitle: 'My Calendar',
     title: 'Course calendar',
     subtitleEmpty: 'Selected courses will appear here',
     subtitleCount: '{{total}} events · {{month}} this month',
@@ -189,6 +205,8 @@ const en: TranslationTree = {
   teachingPlan: {
     title: 'Teaching Plan updates synced',
     titleDated: '({{timestamp}}) Teaching Plan updates synced: {{courses}}',
+    archiveTitle: 'Teaching Plan update archive',
+    archiveNoticeTitle: '[{{timestamp}}] {{courses}}',
     body: 'Schedules for {{code1}} and {{code2}} have been updated to the latest Teaching Plan. Conflicts and calendar events may differ from earlier versions.',
     body7015_7037:
       'Schedules for {{code1}} and {{code2}} have been updated to the latest Teaching Plan. Conflicts and calendar events may differ from earlier versions.',

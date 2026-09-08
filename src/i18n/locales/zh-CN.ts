@@ -12,14 +12,29 @@ const zhCN: TranslationTree = {
   },
   nav: {
     brand: 'HKU MSc(BA) 选课助手',
+    calendar: '我的日历',
     planner: '我的选课',
     timetable: '模块时间表',
     requirements: '培养要求',
+    about: '关于',
+  },
+  about: {
+    versionLabel: '当前版本：',
+    syncLabel: '数据最后更新时间：',
+    tzHkt: 'HKT',
+    tzLocal: '本地',
+    githubAria: '在 GitHub 上查看本项目',
+    menuLabel: '关于菜单',
+    menuArchive: 'Teaching Plan 更新存档',
+    menuDefaultPage: '默认页选择',
+    defaultPageTitle: '默认页选择',
+    defaultPageLegend: '打开网站时默认进入',
+    backToAbout: '← 返回关于',
   },
   footer: {
     credit: '本工具由 缄默姜饼 搭建、Cursor, Google Analytics 与 Cloudflare 提供技术支持。',
     disclaimer1:
-      '本工具模块时间表内信息源自 MSc(BA) Programme Office 提供的 Teaching Plan 2026-27，毕业及 Stream 培养要求源自项目官网及 Curriculum Requirements for Concentrations 文件。以上信息最后与 Programme Office 所提供的信息同步与核查时间为香港时间 2026/09/03 17:23，所有内容均”按原样提供“ (Provided as-is）。',
+      '本工具模块时间表内信息源自 MSc(BA) Programme Office 提供的 Teaching Plan 2026-27，毕业及 Stream 培养要求源自项目官网及 Curriculum Requirements for Concentrations 文件。以上信息最后与 Programme Office 所提供的信息同步与核查时间详见“关于”页面，所有内容均“按原样提供” (Provided as-is)。',
     disclaimer2:
       '该工具不代表香港大学或经管学院的官方立场、保证或承诺。课程安排、考核方式、时间及毕业要求可能随时调整，用户使用该工具时须已知所提供的信息在上述”信息同步与核查“时间点后可能已经过时，需通过学校官方信息发布渠道、Teaching Plan 和 Programme Office 的答复完成事实核查，并独立作出选课决定。开发者不对任何选课结果、未提示的实际时间冲突、毕业进度或因使用本网站产生的其他后果承担责任。',
     disclaimer3:
@@ -123,6 +138,7 @@ const zhCN: TranslationTree = {
     ],
   },
   calendar: {
+    pageTitle: '我的日历',
     title: '选课日历',
     subtitleEmpty: '选择课程后在此查看排课',
     subtitleCount: '共 {{total}} 项日程 · 本月 {{month}} 项',
@@ -189,6 +205,8 @@ const zhCN: TranslationTree = {
   teachingPlan: {
     title: 'Teaching Plan 更新已同步',
     titleDated: '({{timestamp}}) Teaching Plan 更新已同步：{{courses}}',
+    archiveTitle: 'Teaching Plan 更新存档',
+    archiveNoticeTitle: '[{{timestamp}}] {{courses}}',
     body: '{{code1}} 与 {{code2}} 的上课安排已按最新 Teaching Plan 更新，你先前看到的时间冲突与日历内容可能会与旧版本不同。',
     body7015_7037: '{{code1}} 与 {{code2}} 的上课安排已按最新 Teaching Plan 更新，你先前看到的时间冲突与日历内容可能会与旧版本不同。',
     body7002_7003:
