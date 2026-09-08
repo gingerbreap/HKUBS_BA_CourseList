@@ -9,14 +9,11 @@ import {
 import { usePersistentDismiss } from '../hooks/usePersistentDismiss'
 import { useI18n } from '../i18n/context'
 import type { SelectedSection } from '../types'
-
-const DISMISS_PREFIX = 'msba-dismiss-teaching-plan-notice'
-const LEGACY_DISMISS_KEY = 'msba-dismiss-teaching-plan-notice'
-const LEGACY_NOTICE_ID = '20260818-7015-7037'
-
-function dismissStorageKey(noticeId: string): string {
-  return noticeId === LEGACY_NOTICE_ID ? LEGACY_DISMISS_KEY : `${DISMISS_PREFIX}:${noticeId}`
-}
+import {
+  teachingPlanDismissEventName,
+  teachingPlanDismissStorageKey,
+  teachingPlanDismissVersion,
+} from '../utils/teachingPlanDismiss'
 
 function emojiFor(kind: ChangePart['emoji']): string {
   if (kind === 'time') return '⏰ '
@@ -328,11 +325,10 @@ function NoticeCard({
   hasAnySelection: boolean
 }) {
   const { t } = useI18n()
-  const version = notice.updates.map(u => u.courseCode).join('+')
   const { dismissed, dismiss } = usePersistentDismiss(
-    dismissStorageKey(notice.id),
-    version,
-    `msba:dismiss-teaching-plan-${notice.id}`,
+    teachingPlanDismissStorageKey(notice.id),
+    teachingPlanDismissVersion(notice),
+    teachingPlanDismissEventName(notice.id),
   )
   const [expanded, setExpanded] = useState(notice.defaultExpanded)
   const displayRows = useMemo(() => buildDisplayRows(notice), [notice])

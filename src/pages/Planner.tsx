@@ -203,6 +203,7 @@ export default function Planner() {
       <PlannerCalendar
         events={calendarEvents}
         courses={courses}
+        selections={selections}
         onImportSelections={replace}
         onCourseClick={setDetailCode}
       />
