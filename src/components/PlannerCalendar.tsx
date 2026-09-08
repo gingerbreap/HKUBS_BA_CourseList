@@ -1,10 +1,24 @@
-import { useMemo, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import IcsExportModal from './IcsExportModal'
 import StudyStatusImportModal from './StudyStatusImportModal'
 import { CALENDAR_END, CALENDAR_START, holidayLabelKey, holidayLunarTag } from '../data/holidays'
+import { useUnreadTeachingPlanNoticeIds } from '../hooks/useUnreadTeachingPlanNoticeIds'
 import { useI18n } from '../i18n/context'
 import { calendarEventLabel, eventsByDate, type CalendarEvent } from '../utils/calendarEvents'
+import {
+  annotateUpdatedEvents,
+  buildPlanPreviousEvents,
+  type PlanChange,
+} from '../utils/teachingPlanImpact'
 import type { Course, SelectedSection } from '../types'
+
+const LONG_PRESS_MS = 480
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
@@ -30,6 +44,12 @@ function clampMonth(year: number, month: number) {
 function defaultMonth() {
   const now = new Date()
   return clampMonth(now.getFullYear(), now.getMonth())
+}
+
+function monthFromDateKey(dateKey: string): { year: number, month: number } | null {
+  const [y, m] = dateKey.split('-').map(Number)
+  if (!y || !m) return null
+  return clampMonth(y, m - 1)
 }
 
 interface DayCell {
@@ -104,35 +124,182 @@ function HolidayTag({
 
 function EventChip({
   event,
+  focused,
   onCourseClick,
   sectionLabel,
 }: {
   event: CalendarEvent
+  focused: boolean
   onCourseClick?: (courseCode: string) => void
   sectionLabel: (sectionId: string) => string
 }) {
+  const { t } = useI18n()
   const label = calendarEventLabel(event)
   const timed = event.startTime && event.endTime
   const isFinal = event.sessionType === 'exam' || event.sessionType === 'presentation' || event.sessionType === 'other'
+  const isPrevious = event.planRevision === 'previous'
+  const isUpdated = event.planRevision === 'updated'
   const title = [
     label,
     event.sectionId && !isFinal ? sectionLabel(event.sectionId) : '',
     event.instructor,
     timed ? `${event.startTime}-${event.endTime}` : event.date,
     event.venue,
+    isPrevious ? t('calendar.planPreviousTitle') : '',
+    isUpdated ? t('calendar.planUpdatedTitle') : '',
   ].filter(Boolean).join(' · ')
 
   return (
     <button
       type="button"
-      className={`calendar-event calendar-event--${event.sessionType}`}
+      className={[
+        'calendar-event',
+        `calendar-event--${event.sessionType}`,
+        isPrevious && 'calendar-event--plan-previous',
+        isUpdated && 'calendar-event--plan-updated',
+        focused && 'calendar-event--plan-focused',
+      ].filter(Boolean).join(' ')}
       title={title}
-      onClick={() => onCourseClick?.(event.courseCode)}
+      onClick={() => {
+        if (isPrevious) return
+        onCourseClick?.(event.courseCode)
+      }}
+      disabled={isPrevious}
+      aria-label={title}
     >
+      {isPrevious && (
+        <span className="calendar-event-plan-badge">{t('calendar.planPreviousBadge')}</span>
+      )}
+      {isUpdated && !isPrevious && (
+        <span className="calendar-event-plan-badge calendar-event-plan-badge--updated">
+          {t('calendar.planUpdatedBadge')}
+        </span>
+      )}
       <span className="calendar-event-code">{label}</span>
       {timed && <span className="calendar-event-time">{event.startTime}-{event.endTime}</span>}
-      {!isFinal && event.instructor && (
+      {!isFinal && !isPrevious && event.instructor && (
         <span className="calendar-event-instructor">{event.instructor}</span>
+      )}
+    </button>
+  )
+}
+
+/**
+ * Icon nav button: desktop hover tooltip + click navigates;
+ * mobile long-press shows tooltip without navigating; tap navigates and shows tooltip.
+ */
+function PlanNavIconButton({
+  iconClass,
+  label,
+  disabled,
+  onNavigate,
+}: {
+  iconClass: string
+  label: string
+  disabled?: boolean
+  onNavigate: () => void
+}) {
+  const [tipVisible, setTipVisible] = useState(false)
+  const longPressFired = useRef(false)
+  const touchHandled = useRef(false)
+  const pressTimer = useRef<number | null>(null)
+  const tipHideTimer = useRef<number | null>(null)
+
+  const clearPressTimer = () => {
+    if (pressTimer.current != null) {
+      window.clearTimeout(pressTimer.current)
+      pressTimer.current = null
+    }
+  }
+
+  const clearTipHide = () => {
+    if (tipHideTimer.current != null) {
+      window.clearTimeout(tipHideTimer.current)
+      tipHideTimer.current = null
+    }
+  }
+
+  const showTipBriefly = () => {
+    clearTipHide()
+    setTipVisible(true)
+    tipHideTimer.current = window.setTimeout(() => setTipVisible(false), 1600)
+  }
+
+  useEffect(() => () => {
+    clearPressTimer()
+    clearTipHide()
+  }, [])
+
+  const handlePointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (disabled) return
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      longPressFired.current = false
+      touchHandled.current = false
+      clearPressTimer()
+      pressTimer.current = window.setTimeout(() => {
+        longPressFired.current = true
+        setTipVisible(true)
+      }, LONG_PRESS_MS)
+    }
+  }
+
+  const handlePointerUp = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (disabled) return
+    clearPressTimer()
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      touchHandled.current = true
+      if (longPressFired.current) {
+        // Long-press: tip only — do not navigate
+        tipHideTimer.current = window.setTimeout(() => setTipVisible(false), 1600)
+        return
+      }
+      onNavigate()
+      showTipBriefly()
+    }
+  }
+
+  const handlePointerCancel = () => {
+    clearPressTimer()
+    longPressFired.current = false
+  }
+
+  const handleClick = () => {
+    if (disabled) return
+    // Touch already handled in pointerup; skip the synthetic click
+    if (touchHandled.current) {
+      touchHandled.current = false
+      return
+    }
+    onNavigate()
+  }
+
+  return (
+    <button
+      type="button"
+      className="calendar-plan-nav-btn"
+      disabled={disabled}
+      aria-label={label}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      onPointerLeave={() => {
+        clearPressTimer()
+        if (!tipHideTimer.current) setTipVisible(false)
+      }}
+      onMouseEnter={() => {
+        if (window.matchMedia('(hover: hover)').matches) setTipVisible(true)
+      }}
+      onMouseLeave={() => {
+        if (window.matchMedia('(hover: hover)').matches) setTipVisible(false)
+      }}
+      onClick={handleClick}
+      onContextMenu={e => e.preventDefault()}
+    >
+      <i className={iconClass} aria-hidden="true" />
+      {tipVisible && (
+        <span className="calendar-plan-nav-tooltip" role="tooltip">
+          {label}
+        </span>
       )}
     </button>
   )
@@ -141,6 +308,7 @@ function EventChip({
 interface PlannerCalendarProps {
   events: CalendarEvent[]
   courses: Course[]
+  selections: SelectedSection[]
   onImportSelections: (selections: SelectedSection[]) => void
   onCourseClick?: (courseCode: string) => void
 }
@@ -148,6 +316,7 @@ interface PlannerCalendarProps {
 export default function PlannerCalendar({
   events,
   courses,
+  selections,
   onImportSelections,
   onCourseClick,
 }: PlannerCalendarProps) {
@@ -157,7 +326,40 @@ export default function PlannerCalendar({
   const [exportOpen, setExportOpen] = useState(false)
   const [studyStatusOpen, setStudyStatusOpen] = useState(false)
   const [activeHolidayBubble, setActiveHolidayBubble] = useState<string | null>(null)
-  const byDate = useMemo(() => eventsByDate(events), [events])
+  /** null = default (no change focused); 0 = earliest; last = latest */
+  const [focusIndex, setFocusIndex] = useState<number | null>(null)
+
+  const unreadNoticeIds = useUnreadTeachingPlanNoticeIds()
+
+  const displayEvents = useMemo(() => {
+    const previous = buildPlanPreviousEvents(selections, courses, unreadNoticeIds)
+    const { events: annotated, meta } = annotateUpdatedEvents(events, selections, unreadNoticeIds)
+    const merged = [...annotated, ...previous].sort((a, b) =>
+      a.date.localeCompare(b.date)
+      || a.startTime.localeCompare(b.startTime)
+      || (a.planRevision === 'previous' ? -1 : 1),
+    )
+    return {
+      events: merged,
+      changes: meta.changes,
+      previousCount: previous.length,
+      updatedCount: meta.updatedEventCount,
+    }
+  }, [events, selections, courses, unreadNoticeIds])
+
+  // Keep focus index valid when dismiss / selection changes shrink the list
+  useEffect(() => {
+    if (focusIndex === null) return
+    if (displayEvents.changes.length === 0) {
+      setFocusIndex(null)
+      return
+    }
+    if (focusIndex >= displayEvents.changes.length) {
+      setFocusIndex(displayEvents.changes.length - 1)
+    }
+  }, [displayEvents.changes.length, focusIndex])
+
+  const byDate = useMemo(() => eventsByDate(displayEvents.events), [displayEvents.events])
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month])
 
   const holidayFullLabel = (labelKey: string) => t(`holidaysFull.${labelKey}`)
@@ -177,6 +379,46 @@ export default function PlannerCalendar({
     setView(clampMonth(y, m))
   }
 
+  const jumpMonthToDate = (dateKey: string) => {
+    const target = monthFromDateKey(dateKey)
+    if (target) setView(target)
+  }
+
+  const focusChange = (index: number) => {
+    const change = displayEvents.changes[index]
+    if (!change) return
+    setFocusIndex(index)
+    jumpMonthToDate(change.sortDate)
+  }
+
+  const goEarliest = () => {
+    if (displayEvents.changes.length === 0) return
+    focusChange(0)
+  }
+
+  const goPrevious = () => {
+    if (focusIndex === null || focusIndex <= 0) return
+    focusChange(focusIndex - 1)
+  }
+
+  const goNext = () => {
+    if (displayEvents.changes.length === 0) return
+    if (focusIndex === null) {
+      focusChange(0)
+      return
+    }
+    if (focusIndex < displayEvents.changes.length - 1) focusChange(focusIndex + 1)
+  }
+
+  const goLatest = () => {
+    if (displayEvents.changes.length === 0) return
+    focusChange(displayEvents.changes.length - 1)
+  }
+
+  const focusedChange: PlanChange | null =
+    focusIndex !== null ? displayEvents.changes[focusIndex] ?? null : null
+  const focusedChangeId = focusedChange?.id ?? null
+
   const monthLabel = t('calendar.monthLabel', { year, month: month + 1 })
   const monthEventCount = events.filter(e => {
     const [y, m] = e.date.split('-').map(Number)
@@ -185,6 +427,19 @@ export default function PlannerCalendar({
 
   const handleExport = () => {
     setExportOpen(true)
+  }
+
+  const showPlanBanner = displayEvents.previousCount > 0 || displayEvents.updatedCount > 0
+  const dismissLabel = t('common.dismiss')
+  const canPrev = focusIndex !== null && focusIndex > 0
+  const canNext = displayEvents.changes.length > 0 && (
+    focusIndex === null || focusIndex < displayEvents.changes.length - 1
+  )
+  const showRelatedFooter = !!(focusedChange && focusedChange.spansMonths)
+
+  const formatRelatedDay = (dateKey: string) => {
+    const [, m, d] = dateKey.split('-').map(Number)
+    return t('calendar.planUpdateRelatedDay', { month: m, day: d })
   }
 
   return (
@@ -228,6 +483,40 @@ export default function PlannerCalendar({
         </div>
       </div>
 
+      {showPlanBanner && (
+        <div className="calendar-plan-banner">
+          <div className="calendar-plan-banner-text">
+            {t('calendar.planUpdateBanner', { dismiss: dismissLabel })}
+          </div>
+          <div className="calendar-plan-nav" role="group" aria-label={t('calendar.planUpdateNavGroup')}>
+            <PlanNavIconButton
+              iconClass="fas fa-angle-double-left"
+              label={t('calendar.planUpdateNavEarliest')}
+              disabled={displayEvents.changes.length === 0}
+              onNavigate={goEarliest}
+            />
+            <PlanNavIconButton
+              iconClass="fas fa-angle-left"
+              label={t('calendar.planUpdateNavPrev')}
+              disabled={!canPrev}
+              onNavigate={goPrevious}
+            />
+            <PlanNavIconButton
+              iconClass="fas fa-angle-right"
+              label={t('calendar.planUpdateNavNext')}
+              disabled={!canNext}
+              onNavigate={goNext}
+            />
+            <PlanNavIconButton
+              iconClass="fas fa-angle-double-right"
+              label={t('calendar.planUpdateNavLatest')}
+              disabled={displayEvents.changes.length === 0}
+              onNavigate={goLatest}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="calendar-legend">
         <span className="calendar-legend-item">
           <span className="calendar-legend-swatch calendar-event--lecture" /> {t('calendar.legendLec')}
@@ -244,6 +533,16 @@ export default function PlannerCalendar({
         <span className="calendar-legend-item">
           <span className="calendar-legend-swatch calendar-legend-swatch--holiday" /> {t('calendar.legendHoliday')}
         </span>
+        {showPlanBanner && (
+          <>
+            <span className="calendar-legend-item">
+              <span className="calendar-legend-swatch calendar-legend-swatch--plan-previous" /> {t('calendar.legendPlanPrevious')}
+            </span>
+            <span className="calendar-legend-item">
+              <span className="calendar-legend-swatch calendar-legend-swatch--plan-updated" /> {t('calendar.legendPlanUpdated')}
+            </span>
+          </>
+        )}
       </div>
 
       <div className="calendar-weekdays">
@@ -294,13 +593,48 @@ export default function PlannerCalendar({
               </div>
               <div className="calendar-day-events">
                 {dayEvents.map(ev => (
-                  <EventChip key={ev.id} event={ev} onCourseClick={onCourseClick} sectionLabel={sectionLabel} />
+                  <EventChip
+                    key={ev.id}
+                    event={ev}
+                    focused={!!focusedChangeId && ev.planChangeId === focusedChangeId}
+                    onCourseClick={onCourseClick}
+                    sectionLabel={sectionLabel}
+                  />
                 ))}
               </div>
             </div>
           )
         })}
       </div>
+
+      {showRelatedFooter && focusedChange && (
+        <div className="calendar-plan-related-footer">
+          <span className="calendar-plan-related-label">
+            {t('calendar.planUpdateRelatedDates')}
+          </span>
+          {focusedChange.relatedDates.map((dateKey, i) => (
+            <span key={dateKey} className="calendar-plan-related-item">
+              {i > 0 && (
+                <button
+                  type="button"
+                  className="calendar-plan-related-arrow"
+                  aria-label={t('calendar.planUpdateJumpMonth')}
+                  onClick={() => jumpMonthToDate(dateKey)}
+                >
+                  <i className="fas fa-angle-double-right" aria-hidden="true" />
+                </button>
+              )}
+              <button
+                type="button"
+                className="calendar-plan-related-date"
+                onClick={() => jumpMonthToDate(dateKey)}
+              >
+                {formatRelatedDay(dateKey)}
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {exportOpen && (
         <IcsExportModal events={events} onClose={() => setExportOpen(false)} />

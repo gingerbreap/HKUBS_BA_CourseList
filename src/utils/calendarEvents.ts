@@ -17,6 +17,14 @@ export interface CalendarEvent {
   sessionType: CalendarSessionType
   module: number
   examKind?: ExamKind
+  /**
+   * Teaching Plan revision overlay:
+   * - previous: ghost of the old session (hatch + faded)
+   * - updated: current session that was part of a TP change
+   */
+  planRevision?: 'previous' | 'updated'
+  /** Links previous/updated events to a navigable PlanChange (display row key). */
+  planChangeId?: string
 }
 
 export function buildCalendarEvents(
