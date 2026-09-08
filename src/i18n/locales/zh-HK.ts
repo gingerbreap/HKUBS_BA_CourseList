@@ -12,14 +12,29 @@ const zhHK: TranslationTree = {
   },
   nav: {
     brand: 'HKU MSc(BA) 選課助手',
+    calendar: '我的日曆',
     planner: '我的選課',
     timetable: '模組時間表',
     requirements: '培養要求',
+    about: '關於',
+  },
+  about: {
+    versionLabel: '當前版本：',
+    syncLabel: '數據最後更新時間：',
+    tzHkt: 'HKT',
+    tzLocal: '本地',
+    githubAria: '在 GitHub 上查看本項目',
+    menuLabel: '關於選單',
+    menuArchive: 'Teaching Plan 更新存檔',
+    menuDefaultPage: '預設頁選擇',
+    defaultPageTitle: '預設頁選擇',
+    defaultPageLegend: '打開網站時預設進入',
+    backToAbout: '← 返回關於',
   },
   footer: {
     credit: '本工具由 缄默姜饼 搭建、Cursor, Google Analytics 與 Cloudflare 提供技術支援。',
     disclaimer1:
-      '本工具模組時間表內資訊源自 MSc(BA) Programme Office 提供的 Teaching Plan 2026-27，畢業及 Stream 培養要求源自項目官網及 Curriculum Requirements for Concentrations 文件。以上資訊最後與 Programme Office 所提供的資訊同步與核查時間為香港時間 2026/09/03 17:23，所有內容均「按原樣提供」(Provided as-is）。',
+      '本工具模組時間表內資訊源自 MSc(BA) Programme Office 提供的 Teaching Plan 2026-27，畢業及 Stream 培養要求源自項目官網及 Curriculum Requirements for Concentrations 文件。以上資訊最後與 Programme Office 所提供的資訊同步與核查時間詳見「關於」頁面，所有內容均「按原樣提供」(Provided as-is)。',
     disclaimer2:
       '該工具不代表香港大學或經管學院的官方立場、保證或承諾。課程安排、考核方式、時間及畢業要求可能隨時調整，用戶使用該工具時須已知所提供的資訊在上述「資訊同步與核查」時間點後可能已經過時，需透過學校官方資訊發佈渠道、Teaching Plan 和 Programme Office 的答覆完成事實核查，並獨立作出選課決定。開發者不對任何選課結果、未提示的實際時間衝突、畢業進度或因使用本網站產生的其他後果承擔責任。',
     disclaimer3:
@@ -123,6 +138,7 @@ const zhHK: TranslationTree = {
     ],
   },
   calendar: {
+    pageTitle: '我的日曆',
     title: '選課日曆',
     subtitleEmpty: '選擇課程後在此查看排課',
     subtitleCount: '共 {{total}} 項日程 · 本月 {{month}} 項',
@@ -210,7 +226,7 @@ const zhHK: TranslationTree = {
     markAllRead: '一鍵已讀',
     dismissRead: '已讀',
     archiveTitle: 'Teaching Plan 更新存檔',
-    archiveComingSoon: '存檔頁面即將上線，敬請期待。',
+    archiveNoticeTitle: '[{{timestamp}}] {{courses}}',
     body: '{{code1}} 與 {{code2}} 的上課安排已按最新 Teaching Plan 更新，你先前看到的時間衝突與日曆內容可能會與舊版本不同。',
     body7015_7037: '{{code1}} 與 {{code2}} 的上課安排已按最新 Teaching Plan 更新，你先前看到的時間衝突與日曆內容可能會與舊版本不同。',
     body7002_7003:

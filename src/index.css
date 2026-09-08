@@ -1806,3 +1806,141 @@ button.calendar-holiday-label {
 .study-status-warning {
   color: var(--error);
 }
+
+/* About page */
+.about-hero {
+  text-align: center;
+  padding: 28px 12px 20px;
+}
+.about-tool-name {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.about-version,
+.about-sync {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 400;
+}
+.about-tz-toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  color: var(--primary);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.about-github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--text);
+  font-size: 28px;
+}
+.about-github:hover {
+  color: var(--primary);
+  text-decoration: none;
+  background: var(--primary-light);
+}
+.about-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 520px;
+  margin: 8px auto 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+.about-menu-item {
+  display: block;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.about-menu-item:last-child {
+  border-bottom: none;
+}
+.about-menu-item:hover {
+  background: var(--primary-light);
+  text-decoration: none;
+  color: var(--primary);
+}
+.about-back {
+  margin: 4px 0 8px;
+  font-size: 13px;
+}
+.about-default-card {
+  max-width: 520px;
+  padding: 16px;
+}
+.about-default-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.about-default-legend {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding: 0;
+}
+.about-default-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+/* Teaching Plan archive (card layout, not yellow notice) */
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.archive-notice-card {
+  padding: 0;
+  overflow: hidden;
+}
+.archive-notice-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.archive-notice-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.archive-notice-chevron {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.archive-notice-body {
+  padding: 0 16px 16px;
+}
+.archive-notice-body .teaching-plan-notice-text {
+  margin-bottom: 12px;
+}
