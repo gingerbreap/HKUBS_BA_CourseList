@@ -235,6 +235,8 @@ const en: TranslationTree = {
       '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; Class C tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. Conflicts and calendar events may differ from earlier versions.',
     body7002_7003_7004:
       '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. {{code3}} one tutorial moved from Nov 19 to Nov 16. See the calendar below for related changes.',
+    body7002_7004:
+      '{{code1}} Class A & B Oct 22 lectures reverted to regular time/venue; Class D Oct 24 venue updated. {{code2}} Class A Oct 27 lecture cancelled and moved to Oct 22; Class C Oct 24 reverted to regular time/venue. See the calendar below for related changes.',
     colCourse: 'Course',
     colClass: 'Class',
     colItem: 'Rescheduled Item',
