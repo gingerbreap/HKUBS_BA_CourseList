@@ -1,9 +1,27 @@
 # HKU MSc(BA) 选课助手
 
-港大经管学院 MSc(BA) 2026–27 学年选课规划网站（模块制课表、冲突检查、日历与 ICS 导出）。
+港大经管学院 MSc(BA) 2026–27 学年选课规划网站（模块制课表、冲突检查、日历与 ICS、Teaching Plan 更新提示）。
 
 **在线访问：** https://gingerbreap.github.io/HKUBS_BA_CourseList/
 
 数据来自教学计划与课程大纲 PDF，仅供选课参考，以学院正式通知为准。
 
-Teaching Plan 新旧 PDF 与改动检查清单见 [`src/teachingPlan/README.md`](src/teachingPlan/README.md)。
+## 功能概览
+- **我的日历** / **我的选课**（默认可配置）/ 模块时间表 / 培养要求 / **关于**
+- 选课冲突检查、备选清单、Study Status 导入、ICS 导出
+- Teaching Plan 更新：影响摘要、明细表、选课日历改动可视化、更新存档
+- 界面：简体 / 繁中（香港）/ English
+
+## 文档
+| 文档 | 说明 |
+|------|------|
+| [`REQUIREMENTS.md`](REQUIREMENTS.md) | 产品需求与验收标准 |
+| [`src/teachingPlan/README.md`](src/teachingPlan/README.md) | Teaching Plan PDF 同步检查清单 |
+
+## 本地开发
+```bash
+npm install
+npm run dev
+```
+
+构建与部署：push 到 `main` 后由 GitHub Actions 发布到 GitHub Pages。版本号形如 `1.4.8.260909 (commit)`，见关于页。

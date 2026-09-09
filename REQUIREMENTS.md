@@ -1,7 +1,7 @@
 # HKUBS MSc(BA) 选课规划网站 — 需求文档
 
 ## 一、产品概述
-为 HKU Business School MSc(BA) 学生打造一个轻量级选课规划网站，部署于 GitHub Pages。支持中/英界面，数据源自 Programme Office Teaching Plan 与培养要求文件。
+为 HKU Business School MSc(BA) 学生打造一个轻量级选课规划网站，部署于 GitHub Pages。支持简体中文 / 繁體中文（香港）/ 英文界面，数据源自 Programme Office Teaching Plan 与培养要求文件。
 
 ## 二、核心约束
 - **模块制（Module）**：课程按 Module 1~5 组织，非传统 Semester 制。
@@ -9,91 +9,115 @@
 - **GitHub Pages 部署**：纯静态前端，无后端/数据库。
 - **数据维护**：手工维护结构化 JSON；Teaching Plan 变更时对照新旧 PDF 更新（见第七节与 `src/teachingPlan/README.md`）。
 - **学年范围**：当前覆盖 2026-27 学年。
+- **版本号**：`主版本.次版本.修订.yyMMdd`（如 `1.4.8.260909`），构建时由 `vite.config.ts` 注入；关于页另附可点击的短 commit SHA。
 
-## 三、页面与功能
+## 三、导航与落地页
+主导航顺序：**我的日历** → **我的选课** → **模块时间表** → **培养要求** → **关于**。
 
-### 3.1 首页 — 模块时间表（Module Timetable）
+- 默认落地页可在「关于 → 默认页选择」中设为「我的选课」或「我的日历」（`localStorage`）。
+- HashRouter 路径示例：`#/planner`、`#/calendar`、`#/courselist`、`#/requirements`、`#/about`、`#/archive/teaching-plan`。
+
+## 四、页面与功能
+
+### 4.1 模块时间表（Module Timetable）— `#/courselist`
 - 按 Module 1~5 展示全部课程与可选班别（A/B/C…）。
-- 每个班别显示时段标签：`AM`（上午）/ `PM`（下午）/ `NT`（晚间）。
+- 每个班别显示时段标签：`AM` / `PM` / `NT`。
 - 特殊上课日期/教程独立时段需明确展示。
 - Final Presentation 在时间表缩写为 **FINAL PRE**。
 - 分阶段授课教授显示为 `Prof. A & Prof. B`（可在 `&` 处窄屏换行）。
 - 点击课程卡片进入 `/course/:courseCode` 详情页。
 
-### 3.2 规划页 — 我的选课（Planner）
-- 可勾选课程班别，勾选单位粒度为：**课程 + 班别 + 教授**。
-- **同一课号只能选一个班别**（含跨 Module 重复开课）：已选某课号后，其他班别不可选，需先移除再改选。
-- 规划列表中**必须清楚显示教授姓名**。
-- 实时冲突检查：
-  - **硬冲突（Error）**：两个被选课堂在「具体日期 + 具体时间段」上重叠 → 报错/标红；可按严重程度区分（如 ≥3 次 Lecture 冲突）。
-  - **Tutorial 重叠（Warning）**：tutorial 与 lecture / tutorial 重叠 → 仅警告，可折叠；支持「我知道了」持久关闭。
-  - 不做「高强度负载」等软规则提示。
-- 统计已选课程数量（Core / Elective / Capstone）与 Stream/List 完成度。
-- **备选列表（购物车）**：可拖拽排序；「选择」尝试加入已选；「浏览 & 添加」可加入/移出备选；独立 `localStorage`，不参与冲突与日历/ICS。
-- **课程详情弹窗**：已选列表与浏览区点击打开 popup（遮罩、≤90% 视口、Escape/点击遮罩关闭）。
-- **Study Status 导入**：粘贴 CES Study Status，仅解析 `Registered` 记录并覆盖已选。
-- **Teaching Plan 更新通知**（见 3.6）：选课页顶部展示带时间戳的变更对照表。
+### 4.2 我的选课（Planner）— `#/planner`
+- 可勾选课程班别，勾选单位：**课程 + 班别 + 教授**。
+- **同一课号只能选一个班别**（含跨 Module 重复开课）。
+- 规划列表须清楚显示教授姓名。
+- 实时冲突检查（见第九节）；Tutorial 警告支持「我知道了」持久关闭。
+- 统计 Core / Elective / Capstone 与 Stream/List 完成度。
+- 备选列表（购物车）、课程详情弹窗、Study Status 导入同既有约定。
+- **页面最上方**：Teaching Plan 更新提示区（见 4.6）；其下为**内嵌选课日历**（含改动可视化，见 4.5）；冲突提示位于**日历与课程选择器之间**。
 
-### 3.3 课程详情（Course Detail）
-- 模块列表进独立页；规划页以弹窗呈现同一套内容。
-- 同一门课详情可合并；**多教授用 Instructor tab** 切换并加载对应 outline PDF。
-- 会议类型标签：`LEC` / `TUT`（中文界面亦不翻译为「讲座/教程」）。
-- Tutorial 默认折叠；考试 / Final Presentation 作为独立行展示在 LEC 之后。
-- 教授姓名大小写与 Teaching Plan 一致，**姓为全大写**。
+### 4.3 我的日历（My Calendar）— `#/calendar`
+- 独立标签页，展示与选课计划相同的月历能力（LEC/TUT/考试/Presentation、假日、ICS 导出、Study Status 导入）。
+- **不**叠加 Teaching Plan「改期前/后」幽灵场次与导航条（仅呈现最新课表事实）。
+- 若存在未读 Teaching Plan 通知，页底显示浅黄提醒卡片，并可链到选课页。
 
-### 3.4 培养要求页（Programme Requirements）
-- 基于 Appendix C：5 Core + 5 Elective、AI/MC 与 List A/B/C/D。
-- 基于 Appendix E：学习规划关键规则。
+### 4.4 课程详情 / 培养要求
+- 详情：独立页或规划弹窗；多教授 Instructor tab + outline PDF；`LEC`/`TUT` 标签不译；Tutorial 默认折叠；姓全大写。
+- 培养要求：Appendix C（Core/Elective、AI/MC、List A–D）与 Appendix E 相关规则。
 
-### 3.5 选课日历、假日与 ICS 导出
+### 4.5 选课日历、改动可视化、假日与 ICS
+**通用**
 - 月历覆盖已选 **LEC、TUT、Final Exam、Final Presentation**。
 - 日历标题：`MSBAXXXX LEC` / `TUT` / `Final Exam` / `Final Presentation`。
-- **假日只出现在屏幕日历**（合并区间、农历标签、完整名称提示），**不写入 ICS**。
-- ICS：无课时禁用导出并提示；支持按 Module / LEC·TUT 筛选；授课与期末考核可分模板；参数含 `@code`、`@class`、`@classchn`、`@module`、`@name`、`@type`、`@location`、`@prof` 等；教室写入 **LOCATION**。
+- **假日只出现在屏幕日历**，**不写入 ICS**。
+- ICS：无课时禁用；可按 Module / LEC·TUT 筛选；模板参数含 `@code`、`@class`、`@classchn`、`@module`、`@name`、`@type`、`@location`、`@prof` 等；教室写入 **LOCATION**。
 
-### 3.6 Teaching Plan 更新通知
-- 选课页顶部可叠多则通知；**新则默认展开，旧则默认折叠**，标题含同步时间戳与涉及课号。
-- 对照表列：**课程 | 班 | 调整项 | 历史值 | 更新后**。
-- **班**：讲座改动写 A/B/C/D；仅 Tutorial 改动写 **`TUT`**（TUT 不绑定讲座班，不按 A+B 重复行）；同课内 TUT 行沉底。
-- **调整项**：不写 LEC/TUT 前缀；跨日用「日期 / 日期与教室」，同日钟点用「时间」；同日 LEC+TUT 不必在调整项写钟点。
-- **历史值 / 更新后**：只显示变更字段；日期+教室同改时历史值不写原教室；历史值不显示 ⏰，更新后日期时间 ⏰、教室 📌。
-- 用户已选某讲座班时，该班改动行浅黄高亮、班列加粗（`TUT` 行不高亮）。
-- 「我知道了」按通知 id + 涉及课程版本持久关闭。
-- 详细检查清单与 PDF 放置约定：`src/teachingPlan/README.md`。
+**仅「我的选课」内嵌日历（Teaching Plan 影响层）**
+- 对**仍显示（未点「已读」）**的通知：在日历上以淡化底纹显示**改期前场次**，以描边标出**改期后场次**。
+- 图例单独一行：「改期前场次」「改期后场次」。
+- 高亮导航：最早 / 上一个 / 下一个 / 最晚（Font Awesome）；默认无聚焦；点击空白卡片可取消高亮但保留导航序号。
+- 高亮时改期后外框/发光为 `#D74E09`；改期前仅在高亮时用 `#4C5357` 外框。
+- 「当前改动其他关联日期」：仅当**当前月视图网格**看不到某些关联日时出现，并提供跳转（不改变导航序号）。
+- 匹配改期后场次须区分 **lecture / tutorial**，避免同日讲座误标到 TUT 改动上。
+- **教室-only 变更目前不在日历上单独呈现**（仍出现在通知明细表）。
 
-## 四、明确排除项
+### 4.6 Teaching Plan 更新通知与存档
+**选课页置顶区**
+- 区块标题：`❗️Teaching Plan 更新提示`（与「我的选课规划」同级）。
+- 同行操作：**回顾所有更新**（进存档页）、**一键已读**（等同关闭当前全部未读通知，无需依次动效）。
+- 全部已读后，整块提示区消失。
+- 单则标题格式：`Timestamp | CourseCode(s)`，例：`2026/09/03 17:23 | 7002, 7003, 7004`。
+- 单则关闭按钮文案：**已读**（不再用「我知道了」）；按 notice id + 涉及课程版本持久化。
+- **影响优先**：先展示与已选相关的摘要 chip（讲座班底色更深；TUT 较浅；圆圈数字计数）；明细对照表默认折叠，可「仅显示与我相关」。
+- 明细表列：**课程 | 班 | 调整项 | 历史值 | 更新后**（规则见 `src/teachingPlan/README.md`）。
+- 折叠箭头统一为 `fa-caret-right` / `fa-caret-down`，并与「已读」垂直对齐。
+
+**存档**
+- 路径：`#/archive/teaching-plan`、`#/about/teaching-plan-archive`、`#/teaching-plan-archive`（同一页）。
+- 展示**全部**历史通知（不论是否已读），时间倒序；卡片样式（非黄色通知底）；标题格式与上一致。
+
+**关于页**
+- 工具名、当前版本 `x.y.z.yyMMdd (sha)`（sha 可点进 GitHub commit）、数据最后更新时间（默认 HKT，点击时区标签可切本地，不显性宣传）。
+- 菜单：Teaching Plan 更新存档、默认页选择。
+- 页脚改为引导至关于页查看同步核查时间，并注明 Provided as-is。
+
+## 五、明确排除项
 - **不包含**官方 sample study plan。
 - **不做** term capacity / credit cap 限制。
 - **不做**先修/依赖关系求解器。
 - **不做**学习计划自动生成。
 - **不做**难度/作业量评价功能。
 
-## 五、UI 与语言
-- **UI 风格**：尽量复刻参考站布局与信息密度，并适配移动端（含 PDF 回退等）。
-- **语言**：中/英切换（i18n）；课程名保留英文原文；LEC/TUT 等类型标签保持英文三字母（中文界面亦不译）。
-- 页脚注明数据来源与**最后与 Programme Office 信息同步核查时间**。
+## 六、UI 与语言
+- 适配桌面与移动端；折叠控件使用 Font Awesome caret。
+- 语言：`zh-CN` / `zh-HK` / `en`；课程名保留英文；`LEC`/`TUT` 等三字母标签不译。
+- 页脚：数据来源说明 + 指向关于页的同步核查提示 + 免责声明。
 
-## 六、技术方案
+## 七、技术方案
 - 前端：React + Vite + TypeScript
 - 路由：HashRouter（GitHub Pages）
-- 状态：localStorage（已选、备选、通知关闭等）
+- 状态：localStorage（已选、备选、通知已读、默认落地页、同步时区偏好等）
+- 版本注入：`vite.config.ts` → `__APP_VERSION__` / `__APP_COMMIT_SHA__` / `__APP_REPO_URL__`
 - 分析：Google Analytics
 - 部署：GitHub Actions → GitHub Pages（push `main`）
+- Commit message：约定式提交（[Conventional Commits](https://www.conventionalcommits.org/)）
 
-## 七、数据来源（单一事实来源）
+## 八、数据来源（单一事实来源）
 | 内容 | 文件 |
 |------|------|
 | Teaching Plan PDF（按日期后缀归档） | `src/teachingPlan/MSc(BA) Teaching plan 2026-27_YYYYMMDD.pdf` |
 | Teaching Plan 改动检查清单 | `src/teachingPlan/README.md` |
 | 结构化课表 | `public/courses.json` |
-| 培养要求/方向 | `public/requirements.json`（源自 Appendix C 等） |
-| 学习规划 FAQ 原文 | `src/Appendix E_Course Enrolment and Study Planning FAQs.pdf`（如有） |
-| 课程大纲 PDF | `public/courseOutline/`（及 `src/courseOutline/` 源） |
+| 培养要求/方向 | `public/requirements.json` |
+| 课程大纲 PDF | `public/courseOutline/` |
 | 更新通知数据 | `src/data/teachingPlanUpdates.ts` |
+| 同步时间（关于页 / 页脚文案共用） | `src/utils/appMeta.ts` → `DATA_SYNC_HKT` |
+| 日历改动叠加 | `src/utils/teachingPlanImpact.ts`、`PlannerCalendar` |
+| 已读状态 | `src/utils/teachingPlanDismiss.ts` |
 
-同步流程摘要：将新 PDF 放入 `src/teachingPlan/` → 对照旧版与新版**标红**（含 Tutorial 列，勿只信邮件正文）→ 更新 `courses.json` 与通知表 → 更新 i18n 时间戳 → commit / push。
+同步流程摘要：新 PDF → `src/teachingPlan/` → 对照旧版红字 → 更新 `courses.json` + `teachingPlanUpdates.ts` + i18n body → 更新 `DATA_SYNC_HKT` → 本地核对通知/日历 → commit / push `main`。
 
-## 八、数据模型（courses.json 核心字段）
+## 九、数据模型（courses.json 核心字段）
 ```
 courseCode, courseTitle
 module (1~5)
@@ -101,34 +125,27 @@ courseType (Core / Elective / Capstone)
 streamTags (AI-M, AI-A, MC-AM, MC-DE)
 sections[]:
   sectionId (A/B/C…)
-  instructors[]: { name, note? }   // name 姓全大写，如 Prof. Chao DING
+  instructors[]: { name, note? }
   timeBucket (AM/PM/NT)
-  dayPattern, meetingDays[]        // 星期条展示用，不参与冲突
+  dayPattern, meetingDays[]
   meetings[]:
     date, startTime, endTime, venue
     sessionType (lecture / tutorial)
-    instructors[]?                 // 仅当该次课由特定教授讲授
-  examOrFinal?                     // 班别级考试（如 MSBA7025 B/C 时段不同）
+    instructors[]?
+  examOrFinal?
 outlinePdfPath
-examOrFinal:                       // 课程级考试/期末；无则 null
-  kind (exam / presentation / midterm / other)
-  date, startTime, endTime, venue  // 可空（如仅 "Mid-term Examination"）
-  raw                              // 展示用原文
+examOrFinal: kind, date, startTime, endTime, venue, raw
 ```
 
-## 九、冲突检查逻辑
+## 十、冲突检查逻辑
 - 按 `meetings[]` 的「具体日期 + 时间段重叠」判断。
-- lecture vs lecture 重叠 → Error（硬冲突）。
-- tutorial vs lecture / tutorial vs tutorial → Warning。
+- lecture vs lecture → Error；tutorial 相关重叠 → Warning。
 - 星期条与假日不参与冲突计算。
+- 冲突提示 UI 位于选课页日历与课程选择器之间。
 
-## 十、验收标准
-1. 用户可按 Module 浏览课程并区分 AM/PM/NT。
-2. 课程可进入详情页 / 规划弹窗并查看对应 outline PDF。
-3. 规划页可选择课程并清楚看到教授；同一课号不能重复入计划。
-4. 硬冲突能被检测并报错；tutorial 重叠只给 warning。
-5. 培养要求与学习规划关键规则有独立页面。
-6. 已选 LEC/TUT/考试/Presentation 出现在屏幕日历；ICS 不含假日且格式符合 3.5。
-7. Teaching Plan 变更后通知表符合 3.6；PDF 归档于 `src/teachingPlan/`。
-8. 教授姓名姓为全大写；中/英界面可用。
-9. 全站可在 GitHub Pages 正常访问，移动端可基本使用。
+## 十一、验收标准
+1. 可按 Module 浏览并区分 AM/PM/NT；详情 / outline 可用。
+2. 规划页可选课、同课号互斥、教授可见；硬冲突 Error、TUT Warning。
+3. 「我的日历」与「我的选课」日历均可展示日程；仅选课页日历叠加未读 TP 改动可视化。
+4. Teaching Plan 置顶区、已读 / 一键已读、存档页、关于页版本与默认可正常工作。
+5. 三语界面可用；GitHub Pages 可访问；移动端基本可用。
