@@ -58,26 +58,39 @@ a:hover { text-decoration: underline; }
 .navbar-links a { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; white-space: nowrap; }
 .navbar-links a:hover { color: white; text-decoration: none; }
 .navbar-links a.active { color: white; border-bottom: 2px solid white; padding-bottom: 2px; }
+.navbar-utilities {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 .navbar-mobile-controls {
   display: none;
   align-items: center;
-  gap: 2px;
 }
 .navbar-icon-btn,
 .lang-picker-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: none;
   border-radius: 4px;
   background: transparent;
   color: white;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
+}
+.navbar-icon-btn i,
+.lang-picker-btn i {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .navbar-icon-btn:hover,
 .lang-picker-btn:hover {
@@ -1984,6 +1997,14 @@ button.calendar-holiday-label {
   text-align: center;
   padding: 28px 12px 20px;
 }
+.about-logo {
+  display: block;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto 14px;
+  object-fit: contain;
+  border-radius: 20px;
+}
 .about-tool-name {
   font-size: 22px;
   font-weight: 700;
@@ -2210,4 +2231,276 @@ button.calendar-holiday-label {
 }
 .archive-notice-body .teaching-plan-notice-text {
   margin-bottom: 12px;
+}
+
+/* PWA settings */
+.pwa-settings-intro {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.pwa-settings-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px auto;
+  padding: 16px 18px;
+  max-width: 420px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+.pwa-settings-status i {
+  color: #188038;
+  font-size: 18px;
+}
+.pwa-settings-status-hint {
+  margin: 0 0 20px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.pwa-storage-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+}
+.pwa-storage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 0;
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.pwa-storage-row {
+  display: contents;
+}
+.pwa-storage-row-main {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 0.5em;
+  min-width: 0;
+  line-height: 1.55;
+}
+.pwa-storage-label {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.55;
+}
+.pwa-storage-size {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.55;
+}
+.pwa-storage-btn-slot {
+  display: block;
+  width: 0;
+  height: 1.55em;
+}
+.pwa-storage-btn {
+  flex-shrink: 0;
+  justify-self: end;
+  margin: 0;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  line-height: calc(1.55em - 3px);
+  height: 1.55em;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+.pwa-storage-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.pwa-storage-btn--primary-outline {
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+}
+.pwa-storage-btn--primary-outline:hover:not(:disabled) {
+  background: #e8f0fe;
+}
+.pwa-storage-btn--primary-solid {
+  border: 1.5px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+.pwa-storage-btn--primary-solid:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.pwa-storage-btn--danger-outline {
+  border: 1.5px solid #d93025;
+  color: #d93025;
+}
+.pwa-storage-btn--danger-outline:hover:not(:disabled) {
+  background: #fce8e6;
+}
+.pwa-storage-btn--danger-soft {
+  border: 1.5px solid #f6aea9;
+  color: #d93025;
+  background: #fff;
+}
+.pwa-storage-btn--danger-soft:hover:not(:disabled) {
+  background: #fce8e6;
+}
+.pwa-storage-btn--danger-solid {
+  border: 1.5px solid #a50e0e;
+  background: #a50e0e;
+  color: #fff;
+}
+.pwa-storage-btn--danger-solid:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.pwa-confirm-modal {
+  width: min(420px, 92vw);
+  max-width: 92vw;
+}
+.pwa-confirm-body {
+  padding: 28px 22px 20px;
+  text-align: center;
+}
+.pwa-confirm-title {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+.pwa-confirm-title--danger {
+  color: #a50e0e;
+}
+.pwa-confirm-text {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  text-align: center;
+}
+.pwa-confirm-text p {
+  margin: 0 0 8px;
+}
+.pwa-confirm-text p:last-child {
+  margin-bottom: 0;
+}
+.pwa-confirm-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pwa-confirm-actions .pwa-storage-btn {
+  margin-left: 0;
+  min-width: 88px;
+}
+.pwa-settings-unsupported {
+  margin: 28px 12px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.pwa-settings-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 12px;
+}
+.pwa-install-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 200px;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.pwa-install-cta:hover {
+  filter: brightness(1.05);
+}
+.pwa-install-banner {
+  background: #e8f0fe;
+  border-bottom: 1px solid #c6dafc;
+}
+.pwa-install-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: var(--container-max, 1200px);
+  margin: 0 auto;
+  padding: 10px 16px;
+  box-sizing: border-box;
+}
+.pwa-install-banner-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+  font-size: 18px;
+}
+.pwa-install-banner-text {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #174ea6;
+}
+.pwa-install-banner-link {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+}
+.pwa-install-banner-link:hover {
+  text-decoration: underline;
+}
+.pwa-install-banner-dismiss {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #5f6368;
+  cursor: pointer;
+}
+.pwa-install-banner-dismiss:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.navbar-links .navbar-icon-btn {
+  text-decoration: none;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.navbar-links .navbar-icon-btn:hover {
+  text-decoration: none;
 }

@@ -31,6 +31,13 @@ export default function About() {
   return (
     <div>
       <div className="about-hero">
+        <img
+          className="about-logo"
+          src={`${import.meta.env.BASE_URL}logo.png`}
+          alt=""
+          width={128}
+          height={128}
+        />
         <div className="about-tool-name">{t('nav.brand')}</div>
         <div className="about-version">
           {t('about.versionLabel')}
@@ -79,6 +86,9 @@ export default function About() {
         </Link>
         <Link to="/about/import-export" className="about-menu-item">
           {t('about.menuImportExport')}
+        </Link>
+        <Link to="/about/pwa" className="about-menu-item">
+          {t('about.menuPwa')}
         </Link>
       </nav>
 

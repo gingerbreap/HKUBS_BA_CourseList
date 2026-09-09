@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, NavLink, Link, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import LanguagePicker from './components/LanguagePicker'
 import Timetable from './pages/Timetable'
@@ -10,7 +10,10 @@ import About from './pages/About'
 import TeachingPlanArchive from './pages/TeachingPlanArchive'
 import DefaultPageSettings from './pages/DefaultPageSettings'
 import ImportExport from './pages/ImportExport'
+import PwaSettings from './pages/PwaSettings'
+import PwaInstallBanner from './components/PwaInstallBanner'
 import { useI18n } from './i18n/context'
+import { usePwaInstall } from './hooks/usePwaInstall'
 import { trackPageView } from './utils/analytics'
 import { defaultLandingPath } from './utils/appMeta'
 
@@ -30,7 +33,13 @@ function MobileBottomNav() {
   const { t } = useI18n()
   const { pathname } = useLocation()
 
-  const items = [
+  const items: Array<{
+    to: string
+    label: string
+    icon: string
+    active: boolean
+    center?: boolean
+  }> = [
     {
       to: '/planner',
       label: t('nav.planner'),
@@ -62,7 +71,7 @@ function MobileBottomNav() {
       icon: 'fa-ellipsis-h',
       active: isAboutPath(pathname),
     },
-  ] as const
+  ]
 
   return (
     <nav className="mobile-bottom-nav" aria-label={t('nav.brand')}>
@@ -88,6 +97,22 @@ function MobileBottomNav() {
         </NavLink>
       ))}
     </nav>
+  )
+}
+
+function PwaInstallNavButton() {
+  const { t } = useI18n()
+  const { installed, supported } = usePwaInstall()
+  if (installed || !supported) return null
+  return (
+    <Link
+      to="/about/pwa"
+      className="navbar-icon-btn"
+      aria-label={t('about.pwa.installAria')}
+      title={t('about.pwa.installAria')}
+    >
+      <i className="fa-solid fa-download" aria-hidden="true" />
+    </Link>
   )
 }
 
@@ -144,14 +169,21 @@ function App() {
               >
                 {t('nav.about')}
               </NavLink>
-              <LanguagePicker className="lang-picker-desktop" />
+              <div className="navbar-utilities">
+                <PwaInstallNavButton />
+                <LanguagePicker className="lang-picker-desktop" />
+              </div>
             </div>
             <div className="navbar-mobile-controls">
-              <LanguagePicker className="lang-picker-mobile" />
+              <div className="navbar-utilities">
+                <PwaInstallNavButton />
+                <LanguagePicker className="lang-picker-mobile" />
+              </div>
             </div>
           </div>
         </div>
       </nav>
+      <PwaInstallBanner />
       <div className="container app-main">
         <Routes>
           <Route path="/" element={<HomeRedirect />} />
@@ -164,6 +196,7 @@ function App() {
           <Route path="/about/teaching-plan-archive" element={<TeachingPlanArchive />} />
           <Route path="/about/default-page" element={<DefaultPageSettings />} />
           <Route path="/about/import-export" element={<ImportExport />} />
+          <Route path="/about/pwa" element={<PwaSettings />} />
           {/* Shared archive aliases (“回顾所有更新” + About menu) */}
           <Route path="/archive/teaching-plan" element={<TeachingPlanArchive />} />
           <Route path="/teaching-plan-archive" element={<TeachingPlanArchive />} />
