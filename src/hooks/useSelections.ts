@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { SelectedSection } from '../types'
 
-const STORAGE_KEY = 'msba-planner-selections'
+export const SELECTIONS_STORAGE_KEY = 'msba-planner-selections'
 
 export type ToggleResult = 'added' | 'removed' | 'duplicate'
 
 function load(): SelectedSection[] {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    return JSON.parse(localStorage.getItem(SELECTIONS_STORAGE_KEY) || '[]')
   } catch { return [] }
 }
 
@@ -15,7 +15,7 @@ export function useSelections() {
   const [selections, setSelections] = useState<SelectedSection[]>(load)
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(selections))
+    localStorage.setItem(SELECTIONS_STORAGE_KEY, JSON.stringify(selections))
   }, [selections])
 
   const getForCourseCode = useCallback((courseCode: string) => {

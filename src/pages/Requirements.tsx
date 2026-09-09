@@ -49,7 +49,7 @@ export default function Requirements() {
       <div className="stream-card">
         <h3>{t('requirements.aiTitle')}</h3>
         <p>{t('requirements.aiDescription')}</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="stream-lists">
           <div>
             <h4 style={{ fontSize: 14, marginBottom: 8 }}>{t('requirements.listA')}</h4>
             <ul className="course-list">
@@ -72,7 +72,7 @@ export default function Requirements() {
       <div className="stream-card">
         <h3>{t('requirements.mcTitle')}</h3>
         <p>{t('requirements.mcDescription')}</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="stream-lists">
           <div>
             <h4 style={{ fontSize: 14, marginBottom: 8 }}>{t('requirements.listC')}</h4>
             <ul className="course-list">

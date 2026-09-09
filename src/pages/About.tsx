@@ -77,7 +77,17 @@ export default function About() {
         <Link to="/about/default-page" className="about-menu-item">
           {t('about.menuDefaultPage')}
         </Link>
+        <Link to="/about/import-export" className="about-menu-item">
+          {t('about.menuImportExport')}
+        </Link>
       </nav>
+
+      <footer className="site-footer">
+        <p className="site-footer-credit">{t('footer.credit')}</p>
+        <p className="site-footer-disclaimer">{t('footer.disclaimer1')}</p>
+        <p className="site-footer-disclaimer">{t('footer.disclaimer2')}</p>
+        <p className="site-footer-disclaimer">{t('footer.disclaimer3')}</p>
+      </footer>
     </div>
   )
 }

@@ -874,6 +874,16 @@ a:hover { text-decoration: underline; }
 }
 .stream-card h3 { color: var(--primary); margin-bottom: 8px; }
 .stream-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.stream-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .stream-lists {
+    grid-template-columns: 1fr;
+  }
+}
 
 .check-icon { color: var(--success); margin-right: 4px; }
 .cross-icon { color: var(--error); margin-right: 4px; }
@@ -901,30 +911,125 @@ a:hover { text-decoration: underline; }
   .teaching-plan-table td { padding: 6px 8px; }
 }
 
-/* Hamburger for mobile */
+/* Hamburger removed — mobile uses bottom nav */
 .menu-toggle {
   display: none;
 }
+.app-main {
+  padding-top: 8px;
+  padding-bottom: 24px;
+}
+.mobile-bottom-nav {
+  display: none;
+}
+
 @media (max-width: 600px) {
-  .menu-toggle { display: inline-flex; }
   .navbar-mobile-controls { display: flex; }
   .lang-picker-desktop { display: none; }
   .lang-picker-mobile { display: inline-flex; }
-  .navbar-links {
-    display: none;
-    flex-direction: column;
-    align-items: flex-start;
-    position: absolute;
-    top: 100%;
+  .navbar-links { display: none; }
+
+  .app-main {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-bottom-nav {
+    --bottom-nav-h: 56px;
+    --calendar-overflow: calc(var(--bottom-nav-h) * 0.25); /* may rise 25% above white bar */
+    display: flex;
+    position: fixed;
     left: 0;
     right: 0;
-    background: var(--primary);
-    padding: 12px 16px;
-    gap: 12px;
+    bottom: 0;
+    z-index: 150;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 2px;
+    min-height: var(--bottom-nav-h);
+    padding: 0 4px env(safe-area-inset-bottom, 0px);
+    background: #fff;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+    overflow: visible;
   }
-  .navbar-links.open { display: flex; }
-  .navbar-end { position: static; }
-  .navbar-inner { position: relative; }
+
+  .mobile-bottom-nav-item {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    min-width: 0;
+    padding: 6px 2px 8px;
+    color: #9aa0a6;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.15;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-bottom-nav-item:hover {
+    text-decoration: none;
+    color: #5f6368;
+  }
+  .mobile-bottom-nav-item > i {
+    font-size: 18px;
+    line-height: 1;
+  }
+  .mobile-bottom-nav-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .mobile-bottom-nav-item.active {
+    color: var(--primary);
+  }
+
+  .mobile-bottom-nav-item--center {
+    position: relative;
+    z-index: 2;
+    overflow: visible;
+  }
+  /* Keep label spacing like other items (icon slot), circle is absolutely raised */
+  .mobile-bottom-nav-item--center::before {
+    content: '';
+    display: block;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .mobile-bottom-nav-center-btn {
+    position: absolute;
+    left: 50%;
+    top: calc(-1 * var(--calendar-overflow));
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.35);
+    border: 3px solid #fff;
+  }
+  .mobile-bottom-nav-center-btn i {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .mobile-bottom-nav-item--center.active {
+    color: var(--primary);
+  }
+  .mobile-bottom-nav-item--center.active .mobile-bottom-nav-center-btn {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 2px 10px rgba(26, 115, 232, 0.28);
+    border-color: var(--primary-light);
+  }
 }
 
 /* Page title */
@@ -1422,7 +1527,8 @@ button.calendar-holiday-label {
 }
 .calendar-event-code { font-weight: 600; }
 .calendar-event-time,
-.calendar-event-instructor {
+.calendar-event-instructor,
+.calendar-event-venue {
   display: block;
   opacity: 0.9;
   white-space: nowrap;
@@ -1944,12 +2050,43 @@ button.calendar-holiday-label {
   text-decoration: none;
   color: var(--primary);
 }
+.about-subpage {
+  width: 90%;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
 .about-back {
   margin: 4px 0 8px;
+}
+.about-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text);
   font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+}
+.about-back-btn i {
+  font-size: 12px;
+  color: var(--primary);
+}
+.about-back-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  text-decoration: none;
 }
 .about-default-card {
-  max-width: 520px;
+  max-width: none;
+  width: 100%;
   padding: 16px;
 }
 .about-default-fieldset {
@@ -1970,6 +2107,70 @@ button.calendar-holiday-label {
   font-size: 14px;
   padding: 8px 0;
   cursor: pointer;
+}
+.about-transfer-intro {
+  max-width: none;
+  width: 100%;
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.about-transfer-card {
+  max-width: none;
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.about-transfer-h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.about-transfer-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+.about-transfer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.about-transfer-btn {
+  appearance: none;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+.about-transfer-btn:hover:not(:disabled) {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+.about-transfer-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.about-transfer-file-input {
+  display: none;
+}
+.about-transfer-status {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.about-transfer-status--ok {
+  color: var(--success);
+}
+.about-transfer-status--error {
+  color: var(--error);
 }
 
 /* Teaching Plan archive (card layout, not yellow notice) */

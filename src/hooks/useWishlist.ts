@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { SelectedSection } from '../types'
 
-const STORAGE_KEY = 'msba-planner-wishlist'
+export const WISHLIST_STORAGE_KEY = 'msba-planner-wishlist'
 
 function load(): SelectedSection[] {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    return JSON.parse(localStorage.getItem(WISHLIST_STORAGE_KEY) || '[]')
   } catch {
     return []
   }
@@ -19,7 +19,7 @@ export function useWishlist() {
   const [wishlist, setWishlist] = useState<SelectedSection[]>(load)
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(wishlist))
+    localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist))
   }, [wishlist])
 
   const isInWishlist = useCallback((courseCode: string, module: number, sectionId: string) => {
