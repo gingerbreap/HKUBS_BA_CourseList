@@ -70,7 +70,7 @@ const zhCN: TranslationTree = {
     transfer: {
       title: '导入 / 导出',
       intro:
-        '以 JSON 备份或恢复本站数据：专业名、语言偏好、Teaching Plan 已阅情况、默认页偏好、已选课程与备选课程（均保留顺序）。',
+        '以 JSON 备份或恢复本站数据：专业名、语言偏好、Teaching Plan 已阅时间戳、默认页偏好、已选/备选课程（课程代码 + 班别 + status，保留顺序）。',
       exportTitle: '导出',
       exportDesc: '可下载为 JSON 文件，或复制 JSON 到剪贴板。',
       exportFile: '导出为 JSON 文件',

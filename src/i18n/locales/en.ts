@@ -72,7 +72,7 @@ const en: TranslationTree = {
     transfer: {
       title: 'Import / Export',
       intro:
-        'Back up or restore your planner data as JSON: programme name, language, Teaching Plan read status, default page, selected courses, and wishlist (order preserved).',
+        'Back up or restore your planner data as JSON: programme name, language, Teaching Plan read timestamps, default page, and selected/wishlist courses (course code + class + status; order preserved).',
       exportTitle: 'Export',
       exportDesc: 'Save a JSON file or copy JSON to the clipboard.',
       exportFile: 'Export JSON file',

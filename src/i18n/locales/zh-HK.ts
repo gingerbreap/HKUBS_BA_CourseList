@@ -70,7 +70,7 @@ const zhHK: TranslationTree = {
     transfer: {
       title: '匯入 / 匯出',
       intro:
-        '以 JSON 備份或還原本站資料：專業名、語言偏好、Teaching Plan 已閱情況、預設頁偏好、已選課程與備選課程（均保留順序）。',
+        '以 JSON 備份或還原本站資料：專業名、語言偏好、Teaching Plan 已閱時間戳、預設頁偏好、已選/備選課程（課程代碼 + 班別 + status，保留順序）。',
       exportTitle: '匯出',
       exportDesc: '可下載為 JSON 檔，或複製 JSON 到剪貼簿。',
       exportFile: '匯出為 JSON 檔',

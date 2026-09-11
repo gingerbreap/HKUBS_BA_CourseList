@@ -8,12 +8,32 @@ import {
   teachingPlanDismissVersion,
 } from './teachingPlanDismiss'
 import { teachingPlanNotices } from '../data/teachingPlanUpdates'
-import type { SelectedSection } from '../types'
+import { formatSectionInstructors } from './instructors'
+import type { Course, SelectedSection } from '../types'
 
 /** Stable programme id for this planner (专业名). */
 export const PLANNER_PROGRAMME = 'MSc(BA)' as const
 
-export const USER_DATA_SCHEMA_VERSION = 1 as const
+/**
+ * 1.5: slim course refs; teachingPlanRead keys are publish timestamps only.
+ * Older backups (noticeId → token, full SelectedSection rows) still import.
+ */
+export const USER_DATA_SCHEMA_VERSION = 1.5 as const
+
+export const COURSE_STATUS_REGISTERED = 'registered' as const
+export const COURSE_STATUS_WISHLIST = 'wishlist' as const
+
+/** Compact course row in backup JSON (catalog fields rehydrated on import). */
+export interface UserDataCourseEntry {
+  courseCode: string
+  /** Class letter / section id */
+  sectionId: string
+  /**
+   * Enrollment status for forward compatibility.
+   * Current app: selections → `registered`, wishlist → `wishlist`.
+   */
+  status: string
+}
 
 export interface UserDataSnapshot {
   schemaVersion: typeof USER_DATA_SCHEMA_VERSION
@@ -23,14 +43,14 @@ export interface UserDataSnapshot {
   locale: Locale
   defaultLanding: DefaultLanding
   /**
-   * Teaching Plan notices marked read: noticeId → dismiss version string.
-   * Only includes notices that were dismissed at export time.
+   * Teaching Plan notices marked read.
+   * Keys are notice publish timestamps (e.g. `2026/09/11 18:22`); value is always `true`.
    */
-  teachingPlanRead: Record<string, string>
+  teachingPlanRead: Record<string, true>
   /** Selected courses, preserved order */
-  selections: SelectedSection[]
+  selections: UserDataCourseEntry[]
   /** Wishlist / backup courses, preserved order */
-  wishlist: SelectedSection[]
+  wishlist: UserDataCourseEntry[]
 }
 
 function readJsonArray(key: string): SelectedSection[] {
@@ -41,6 +61,14 @@ function readJsonArray(key: string): SelectedSection[] {
     return Array.isArray(parsed) ? parsed : []
   } catch {
     return []
+  }
+}
+
+function toCourseEntry(s: SelectedSection, status: string): UserDataCourseEntry {
+  return {
+    courseCode: s.courseCode,
+    sectionId: s.sectionId,
+    status,
   }
 }
 
@@ -64,14 +92,15 @@ function readDefaultLanding(): DefaultLanding {
   }
 }
 
-function readTeachingPlanRead(): Record<string, string> {
-  const out: Record<string, string> = {}
+/** Export dismissed notices as `{ [timestamp]: true }`. */
+function readTeachingPlanRead(): Record<string, true> {
+  const out: Record<string, true> = {}
   for (const notice of teachingPlanNotices) {
     const version = teachingPlanDismissVersion(notice)
     if (!version) continue
     try {
       const stored = localStorage.getItem(teachingPlanDismissStorageKey(notice.id))
-      if (stored === version) out[notice.id] = version
+      if (stored === version) out[notice.timestamp] = true
     } catch {
       /* ignore */
     }
@@ -87,8 +116,12 @@ export function buildUserDataSnapshot(): UserDataSnapshot {
     locale: readLocale(),
     defaultLanding: readDefaultLanding(),
     teachingPlanRead: readTeachingPlanRead(),
-    selections: readJsonArray(SELECTIONS_STORAGE_KEY),
-    wishlist: readJsonArray(WISHLIST_STORAGE_KEY),
+    selections: readJsonArray(SELECTIONS_STORAGE_KEY).map(s =>
+      toCourseEntry(s, COURSE_STATUS_REGISTERED),
+    ),
+    wishlist: readJsonArray(WISHLIST_STORAGE_KEY).map(s =>
+      toCourseEntry(s, COURSE_STATUS_WISHLIST),
+    ),
   }
 }
 
@@ -96,22 +129,68 @@ export function snapshotToJson(snapshot: UserDataSnapshot): string {
   return `${JSON.stringify(snapshot, null, 2)}\n`
 }
 
-function isSelectedSection(value: unknown): value is SelectedSection {
-  if (!value || typeof value !== 'object') return false
+function parseCourseEntry(value: unknown, defaultStatus: string): UserDataCourseEntry | null {
+  if (!value || typeof value !== 'object') return null
   const v = value as Record<string, unknown>
-  return (
-    typeof v.courseCode === 'string'
-    && typeof v.courseTitle === 'string'
-    && typeof v.module === 'number'
-    && typeof v.courseType === 'string'
-    && typeof v.sectionId === 'string'
-    && typeof v.instructor === 'string'
-  )
+  if (typeof v.courseCode !== 'string' || !v.courseCode.trim()) return null
+  if (typeof v.sectionId !== 'string' || !v.sectionId.trim()) return null
+  const status =
+    typeof v.status === 'string' && v.status.trim()
+      ? v.status.trim()
+      : defaultStatus
+  return {
+    courseCode: v.courseCode.trim(),
+    sectionId: v.sectionId.trim(),
+    status,
+  }
 }
 
-function sanitizeCourseList(value: unknown): SelectedSection[] {
+function sanitizeCourseList(value: unknown, defaultStatus: string): UserDataCourseEntry[] {
   if (!Array.isArray(value)) return []
-  return value.filter(isSelectedSection)
+  const out: UserDataCourseEntry[] = []
+  for (const item of value) {
+    const entry = parseCourseEntry(item, defaultStatus)
+    if (entry) out.push(entry)
+  }
+  return out
+}
+
+const TIMESTAMP_KEY_RE = /^\d{4}\/\d{2}\/\d{2}/
+
+/**
+ * Normalize teachingPlanRead into `{ [publishTimestamp]: true }`.
+ * Accepts schema 1.5 keys-as-timestamps, plus legacy noticeId → token maps.
+ */
+function normalizeTeachingPlanRead(raw: Record<string, unknown>): Record<string, true> {
+  const out: Record<string, true> = {}
+
+  const markTimestamp = (ts: string) => {
+    if (ts) out[ts] = true
+  }
+
+  for (const [key, value] of Object.entries(raw)) {
+    if (TIMESTAMP_KEY_RE.test(key) || teachingPlanNotices.some(n => n.timestamp === key)) {
+      markTimestamp(key)
+      continue
+    }
+
+    const byId = teachingPlanNotices.find(n => n.id === key)
+    if (byId) {
+      markTimestamp(byId.timestamp)
+      continue
+    }
+
+    if (typeof value === 'string' && value) {
+      if (TIMESTAMP_KEY_RE.test(value) || teachingPlanNotices.some(n => n.timestamp === value)) {
+        markTimestamp(value)
+        continue
+      }
+      const byVersion = teachingPlanNotices.find(n => teachingPlanDismissVersion(n) === value)
+      if (byVersion) markTimestamp(byVersion.timestamp)
+    }
+  }
+
+  return out
 }
 
 export type ParseUserDataResult =
@@ -140,14 +219,12 @@ export function parseUserDataJson(text: string): ParseUserDataResult {
     return { ok: false, error: 'invalidShape' }
   }
 
-  const teachingPlanRead: Record<string, string> = {}
+  let teachingPlanRead: Record<string, true> = {}
   if (obj.teachingPlanRead != null) {
     if (typeof obj.teachingPlanRead !== 'object' || Array.isArray(obj.teachingPlanRead)) {
       return { ok: false, error: 'invalidShape' }
     }
-    for (const [id, version] of Object.entries(obj.teachingPlanRead as Record<string, unknown>)) {
-      if (typeof version === 'string' && version) teachingPlanRead[id] = version
-    }
+    teachingPlanRead = normalizeTeachingPlanRead(obj.teachingPlanRead as Record<string, unknown>)
   }
 
   return {
@@ -159,26 +236,63 @@ export function parseUserDataJson(text: string): ParseUserDataResult {
       locale,
       defaultLanding,
       teachingPlanRead,
-      selections: sanitizeCourseList(obj.selections),
-      wishlist: sanitizeCourseList(obj.wishlist),
+      selections: sanitizeCourseList(obj.selections, COURSE_STATUS_REGISTERED),
+      wishlist: sanitizeCourseList(obj.wishlist, COURSE_STATUS_WISHLIST),
     },
   }
 }
 
+async function fetchCoursesCatalog(): Promise<Course[]> {
+  const res = await fetch(`${import.meta.env.BASE_URL}courses.json`)
+  if (!res.ok) throw new Error('coursesFetchFailed')
+  const data: unknown = await res.json()
+  return Array.isArray(data) ? (data as Course[]) : []
+}
+
+function hydrateCourseEntries(
+  entries: UserDataCourseEntry[],
+  courses: Course[],
+): SelectedSection[] {
+  const byCode = new Map(courses.map(c => [c.courseCode, c]))
+  const out: SelectedSection[] = []
+  for (const entry of entries) {
+    const course = byCode.get(entry.courseCode)
+    if (!course) continue
+    const section = course.sections.find(s => s.sectionId === entry.sectionId)
+    if (!section) continue
+    out.push({
+      courseCode: course.courseCode,
+      courseTitle: course.courseTitle,
+      module: course.module,
+      courseType: course.courseType,
+      sectionId: section.sectionId,
+      instructor: formatSectionInstructors(section),
+    })
+  }
+  return out
+}
+
+function isTeachingPlanRead(noticeTimestamp: string, read: Record<string, true>): boolean {
+  return read[noticeTimestamp] === true
+}
+
 /** Apply snapshot to localStorage and notify Teaching Plan dismiss listeners. */
-export function applyUserDataSnapshot(data: UserDataSnapshot): void {
+export async function applyUserDataSnapshot(data: UserDataSnapshot): Promise<void> {
+  const courses = await fetchCoursesCatalog()
+  const selections = hydrateCourseEntries(data.selections, courses)
+  const wishlist = hydrateCourseEntries(data.wishlist, courses)
+
   localStorage.setItem(LOCALE_STORAGE_KEY, data.locale)
   localStorage.setItem(DEFAULT_LANDING_STORAGE_KEY, data.defaultLanding)
-  localStorage.setItem(SELECTIONS_STORAGE_KEY, JSON.stringify(data.selections))
-  localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(data.wishlist))
+  localStorage.setItem(SELECTIONS_STORAGE_KEY, JSON.stringify(selections))
+  localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist))
 
   for (const notice of teachingPlanNotices) {
     const key = teachingPlanDismissStorageKey(notice.id)
-    const nextVersion = data.teachingPlanRead[notice.id]
     const expected = teachingPlanDismissVersion(notice)
     try {
-      if (nextVersion && expected && nextVersion === expected) {
-        localStorage.setItem(key, nextVersion)
+      if (isTeachingPlanRead(notice.timestamp, data.teachingPlanRead) && expected) {
+        localStorage.setItem(key, expected)
       } else {
         localStorage.removeItem(key)
       }
