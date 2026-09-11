@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'node:child_process'
 
-const APP_VERSION_BASE = '1.5.0'
+const APP_VERSION_BASE = '1.5.1'
 
 function git(command: string): string {
   try {
@@ -49,6 +49,9 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,webmanifest}'],
         navigateFallback: 'index.html',
+        // Iframe PDF loads are navigations; without a denylist Workbox serves index.html
+        // (course outline embeds become a miniature homepage).
+        navigateFallbackDenylist: [/\.pdf$/i],
         // workbox-build's production terser pass can hang / fail ("Unfinished hook action(s) on exit: (terser) renderChunk").
         mode: 'development',
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,

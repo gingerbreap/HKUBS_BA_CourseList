@@ -10,7 +10,7 @@ export const DEFAULT_LANDING_STORAGE_KEY = 'msba-default-landing'
 export type DefaultLanding = 'planner' | 'calendar'
 
 export function getAppVersion(): string {
-  return typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.5.0.260910'
+  return typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.5.1.260911'
 }
 
 export function getAppCommitSha(): string {
