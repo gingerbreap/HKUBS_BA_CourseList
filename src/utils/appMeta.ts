@@ -1,16 +1,16 @@
 /** Programme Office sync/check timestamp (Hong Kong Time). Shared by About + footer copy. */
 export const DATA_SYNC_HKT = {
-  /** Display form used in notices / copy: 2026/09/09 16:41 */
-  display: '2026/09/09 16:41',
+  /** Display form used in notices / copy: 2026/09/11 18:22 */
+  display: '2026/09/11 18:22',
   /** ISO-like instant in HKT for timezone conversion */
-  iso: '2026-09-09T16:41:00+08:00',
+  iso: '2026-09-11T18:22:00+08:00',
 } as const
 
 export const DEFAULT_LANDING_STORAGE_KEY = 'msba-default-landing'
 export type DefaultLanding = 'planner' | 'calendar'
 
 export function getAppVersion(): string {
-  return typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.5.1.260911'
+  return typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.5.2.260911'
 }
 
 export function getAppCommitSha(): string {
