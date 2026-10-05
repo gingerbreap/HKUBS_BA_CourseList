@@ -1,3 +1,5 @@
+import { formatTutClassLabel } from '../utils/tutorialScope'
+
 export type ChangeEmoji = 'time' | 'venue'
 
 export interface ChangePart {
@@ -8,10 +10,16 @@ export interface ChangePart {
 
 export interface TeachingPlanUpdateRow {
   /**
-   * Class letter (A/B/C…) or "TUT" for tutorial-wide changes
-   * (tutorials are not bound to a lecture class).
+   * Class letter (A/B/C…) for lecture changes, or "TUT" for tutorial changes.
+   * Pair TUT rows with `tutorialFor` so the Class column can show which
+   * subclasses share that tutorial (e.g. TUT (A+B), TUT (C)).
    */
   sectionId?: string
+  /**
+   * Lecture subclass ids the tutorial applies to. Required for TUT rows
+   * whenever the Teaching Plan groups or splits tutorials by class.
+   */
+  tutorialFor?: string[]
   /**
    * i18n key under teachingPlan.items.*
    * sessionVenue / sessionTime / sessionTimeVenue use itemDate
@@ -54,6 +62,7 @@ export interface TeachingPlanDisplayRow {
   courseCode: string
   courseTitle: string
   sectionId?: string
+  tutorialFor?: string[]
   itemKey: string
   itemDate?: string
   sessionKind?: 'LEC' | 'TUT'
@@ -82,13 +91,13 @@ export function buildDisplayRows(notice: TeachingPlanNotice): TeachingPlanDispla
     const hasTutorials = !!update.hasTutorials
     // Lecture-class rows first; tutorial-wide ("TUT") rows last within the course
     const orderedRows = [...update.rows].sort((a, b) => {
-      const aTut = a.sectionId === 'TUT' || a.sessionKind === 'TUT' || a.itemKey.startsWith('tut') ? 1 : 0
-      const bTut = b.sectionId === 'TUT' || b.sessionKind === 'TUT' || b.itemKey.startsWith('tut') ? 1 : 0
+      const aTut = isTutorialPlanRow(a) ? 1 : 0
+      const bTut = isTutorialPlanRow(b) ? 1 : 0
       return aTut - bTut
     })
 
     for (const [index, row] of orderedRows.entries()) {
-      const section = row.sectionId ?? ''
+      const section = planRowClassKey(row)
       const itemDate = row.itemDate ?? ''
       const sessionKind = row.sessionKind ?? ''
       const itemTime = row.itemTime ?? ''
@@ -109,6 +118,7 @@ export function buildDisplayRows(notice: TeachingPlanNotice): TeachingPlanDispla
         courseCode: update.courseCode,
         courseTitle: update.courseTitle,
         sectionId: row.sectionId,
+        tutorialFor: row.tutorialFor,
         itemKey: row.itemKey,
         itemDate: row.itemDate,
         sessionKind: row.sessionKind,
@@ -138,15 +148,94 @@ const time = (text: string): ChangePart => ({ text, emoji: 'time' })
 const venue = (text: string): ChangePart => ({ text, emoji: 'venue' })
 const plain = (text: string): ChangePart => ({ text })
 
+export function isTutorialPlanRow(row: {
+  sectionId?: string
+  sessionKind?: 'LEC' | 'TUT'
+  itemKey: string
+}): boolean {
+  return row.sessionKind === 'TUT' || row.sectionId === 'TUT' || row.itemKey.startsWith('tut')
+}
+
+export function planRowClassKey(row: {
+  sectionId?: string
+  sessionKind?: 'LEC' | 'TUT'
+  itemKey: string
+  tutorialFor?: string[]
+}): string {
+  if (isTutorialPlanRow(row)) {
+    const scope = (row.tutorialFor ?? []).join('+')
+    return `TUT:${scope}`
+  }
+  return row.sectionId ?? ''
+}
+
+export function planClassColumnText(row: {
+  sectionId?: string
+  sessionKind?: 'LEC' | 'TUT'
+  itemKey: string
+  tutorialFor?: string[]
+}): string {
+  if (!row.sectionId) return ''
+  if (isTutorialPlanRow(row)) return formatTutClassLabel(row.tutorialFor)
+  return row.sectionId
+}
+
+export function teachingPlanRowAffectsUser(
+  row: { courseCode: string; sectionId?: string; sessionKind?: 'LEC' | 'TUT'; itemKey: string; tutorialFor?: string[] },
+  selectedSet: Set<string>,
+  selectedCourses: Set<string>,
+): boolean {
+  if (!row.sectionId) return selectedCourses.has(row.courseCode)
+  if (isTutorialPlanRow(row)) {
+    if (row.tutorialFor && row.tutorialFor.length > 0) {
+      return row.tutorialFor.some(id => selectedSet.has(`${row.courseCode}::${id}`))
+    }
+    return selectedCourses.has(row.courseCode)
+  }
+  return selectedSet.has(`${row.courseCode}::${row.sectionId}`)
+}
+
 /** Newest first. */
 export const teachingPlanNotices: TeachingPlanNotice[] = [
+  {
+    id: '20261005-7027',
+    timestamp: '2026/10/05 19:05',
+    courseRefs: '7027',
+    bodyKey: 'body7027_1005',
+    bodyParams: { code1: 'MSBA7027' },
+    defaultExpanded: true,
+    updates: [
+      {
+        courseCode: 'MSBA7027',
+        courseTitle: 'Machine Learning',
+        hasTutorials: true,
+        rows: [
+          {
+            sectionId: 'B',
+            itemKey: 'lecTimeVenue',
+            previous: [time('Jan 9, 2027 (Sat) 18:30-21:30')],
+            updated: [
+              time('Jan 16, 2027 (Sat) 14:00-17:00'),
+              venue('LT104'),
+            ],
+          },
+          {
+            sectionId: 'C',
+            itemKey: 'lecTime',
+            previous: [time('Jan 9, 2027 (Sat) 14:00-17:00')],
+            updated: [time('Jan 16, 2027 (Sat) 09:30-12:30')],
+          },
+        ],
+      },
+    ],
+  },
   {
     id: '20260922-7003',
     timestamp: '2026/09/22 11:26',
     courseRefs: '7003',
     bodyKey: 'body7003_0922',
     bodyParams: { code1: 'MSBA7003' },
-    defaultExpanded: true,
+    defaultExpanded: false,
     updates: [
       {
         courseCode: 'MSBA7003',
@@ -226,6 +315,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
           },
           {
             sectionId: 'TUT',
+            tutorialFor: ['C'],
             itemKey: 'sessionTime',
             itemDate: 'Sep 23',
             sessionKind: 'TUT',
@@ -349,6 +439,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
           },
           {
             sectionId: 'TUT',
+            tutorialFor: ['C'],
             itemKey: 'sessionTime',
             itemDate: 'Sep 23',
             sessionKind: 'TUT',
@@ -450,6 +541,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
           },
           {
             sectionId: 'TUT',
+            tutorialFor: ['A', 'B'],
             itemKey: 'sessionVenue',
             itemDate: 'Oct 30',
             sessionKind: 'TUT',
@@ -465,6 +557,7 @@ export const teachingPlanNotices: TeachingPlanNotice[] = [
         rows: [
           {
             sectionId: 'TUT',
+            tutorialFor: ['A', 'B'],
             itemKey: 'tutTime',
             sessionKind: 'TUT',
             previous: [time('Nov 19, 2026 (Thu) 18:30-21:00')],

@@ -163,6 +163,8 @@ const en: TranslationTree = {
     professor: 'Professor',
     tutShow: 'TUT ({{count}} sessions) (Show)',
     tutHide: 'TUT ({{count}} sessions) (Hide)',
+    tutShowScoped: 'TUT ({{scope}}) ({{count}} sessions) (Show)',
+    tutHideScoped: 'TUT ({{scope}}) ({{count}} sessions) (Hide)',
     modalLabel: 'Course details',
     pdfTitle: 'Course Outline',
     pdfMobileNote: 'For better viewing experience, please',
@@ -300,13 +302,15 @@ const en: TranslationTree = {
     body7002_7003:
       '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; Class C tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. Conflicts and calendar events may differ from earlier versions.',
     body7002_7003_7004:
-      '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. {{code3}} one tutorial moved from Nov 19 to Nov 16. See the calendar below for related changes.',
+      '{{code2}} (Class C & D) lectures on Sep 29 and Oct 2 were cancelled and rescheduled; Class C tutorials were updated. {{code1}} (Class A–D) teaching schedules and venues were updated. {{code3}} Class A & B one tutorial moved from Nov 19 to Nov 16. See the calendar below for related changes.',
     body7003_0922:
       '{{code1}} (Class C & D) lectures have been cancelled and rescheduled: Class C Sep 29 and Oct 2 move to Oct 7 and Oct 10 (18:30-21:30); Class D Sep 29 and Oct 2 move to Oct 8 and Oct 12 (18:30-21:30). See the calendar below for related changes.',
     body7003:
       '{{code1}} (Class C & D) lectures have been cancelled and rescheduled: Class C Sep 23 and Oct 7 evening lectures revert to Sep 29 and Oct 2 regular slots; Class D Sep 24 and Oct 8 evening lectures revert to Sep 29 and Oct 2 regular slots; Class C Sep 23 tutorial time updated. See the calendar below for related changes.',
     body7002_7004:
       '{{code1}} Class A & B Oct 22 lectures reverted to regular time/venue; Class D Oct 24 venue updated. {{code2}} Class A Oct 27 lecture cancelled and moved to Oct 22; Class C Oct 24 reverted to regular time/venue. See the calendar below for related changes.',
+    body7027_1005:
+      '{{code1}} (Class B & C) lectures on January 9 were cancelled and rescheduled: Class B moves to January 16 (14:00-17:00, LT104); Class C moves to January 16 (09:30-12:30, LT104). See the calendar below for related changes.',
     colCourse: 'Course',
     colClass: 'Class',
     colItem: 'Rescheduled Item',
