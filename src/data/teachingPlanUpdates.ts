@@ -198,13 +198,52 @@ export function teachingPlanRowAffectsUser(
 /** Newest first. */
 export const teachingPlanNotices: TeachingPlanNotice[] = [
   {
-    id: '20261005-7027',
+    id: '20261005-7004-7027',
     timestamp: '2026/10/05 19:05',
-    courseRefs: '7027',
-    bodyKey: 'body7027_1005',
-    bodyParams: { code1: 'MSBA7027' },
+    courseRefs: '7004, 7027',
+    bodyKey: 'body7004_7027_1005',
+    bodyParams: { code1: 'MSBA7004', code2: 'MSBA7027' },
     defaultExpanded: true,
     updates: [
+      {
+        courseCode: 'MSBA7004',
+        courseTitle: 'Operations Analytics',
+        hasTutorials: true,
+        rows: [
+          {
+            sectionId: 'TUT',
+            tutorialFor: ['A', 'B'],
+            itemKey: 'date',
+            sessionKind: 'TUT',
+            previous: [time('Nov 2, 2026 (Mon) 18:30-21:00')],
+            updated: [plain('Cancelled')],
+          },
+          {
+            sectionId: 'TUT',
+            tutorialFor: ['A', 'B'],
+            itemKey: 'date',
+            sessionKind: 'TUT',
+            previous: [time('Nov 11, 2026 (Wed) 18:30-21:00')],
+            updated: [plain('Cancelled')],
+          },
+          {
+            sectionId: 'TUT',
+            tutorialFor: ['C', 'D'],
+            itemKey: 'date',
+            sessionKind: 'TUT',
+            previous: [time('Oct 31, 2026 (Sat) 18:30-21:00')],
+            updated: [plain('Cancelled')],
+          },
+          {
+            sectionId: 'TUT',
+            tutorialFor: ['C', 'D'],
+            itemKey: 'date',
+            sessionKind: 'TUT',
+            previous: [time('Nov 10, 2026 (Tue) 18:30-21:00')],
+            updated: [plain('Cancelled')],
+          },
+        ],
+      },
       {
         courseCode: 'MSBA7027',
         courseTitle: 'Machine Learning',
