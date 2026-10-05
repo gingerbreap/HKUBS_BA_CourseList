@@ -26,7 +26,7 @@ function examBadgeClass(exam: ExamOrFinal): string {
   return exam.kind === 'presentation' || exam.kind === 'other' ? 'badge-presentation' : 'badge-exam'
 }
 
-function tutorialScopeForSection(course: Course, section: Section, meetings: Meeting[]): string[] {
+function tutorialScopeForSection(section: Section, meetings: Meeting[]): string[] {
   const fromMeetings = meetings.flatMap(m => m.tutorialFor ?? [])
   if (fromMeetings.length > 0) return [...new Set(fromMeetings)]
   return [section.sectionId]
@@ -40,7 +40,7 @@ function tutToggleLabel(
   t: (key: string, vars?: Record<string, string | number>) => string,
 ): string {
   const allIds = course.sections.map(s => s.sectionId)
-  const scopeIds = tutorialScopeForSection(course, section, tutorialMeetings)
+  const scopeIds = tutorialScopeForSection(section, tutorialMeetings)
   const shared = scopeIds.length > 1 || (scopeIds.length === 1 && allIds.length > 1 && scopeIds[0] !== section.sectionId)
   const vars = {
     count: tutorialMeetings.length,
