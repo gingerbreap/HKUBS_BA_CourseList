@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'node:child_process'
 
-const APP_VERSION_BASE = '1.5.5'
+const APP_VERSION_BASE = '1.5.6'
 
 function git(command: string): string {
   try {
