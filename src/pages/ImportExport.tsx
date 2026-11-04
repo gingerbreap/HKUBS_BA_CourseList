@@ -8,6 +8,11 @@ import {
   downloadJsonFile,
   snapshotToJson,
 } from '../utils/userDataTransfer'
+import {
+  PWA_EXPLAIN_MD_URL,
+  filterPwaExplainMarkdown,
+  pwaExplainMarkdownToHtml,
+} from '../utils/pwaExplainMarkdown'
 
 type StatusKind = 'ok' | 'error'
 
@@ -24,7 +29,8 @@ interface ToastState {
 }
 
 const TOAST_MS = 2400
-const NEW_SITE_URL = 'https://tpghelper.gbrp.top/msba'
+const NEW_SITE_IMPORT_URL = 'https://tpghelper.gbrp.top/msba/#/about/import-export'
+const NEW_SITE_PWA_URL = 'https://tpghelper.gbrp.top/msba/#/about/pwa'
 
 export default function ImportExport() {
   const { t } = useI18n()
@@ -33,6 +39,10 @@ export default function ImportExport() {
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [exportModalJson, setExportModalJson] = useState<string | null>(null)
+  const [pwaModalOpen, setPwaModalOpen] = useState(false)
+  const [pwaHtml, setPwaHtml] = useState<string | null>(null)
+  const [pwaLoading, setPwaLoading] = useState(false)
+  const [pwaError, setPwaError] = useState(false)
 
   const showOk = (message: string) => setStatus({ kind: 'ok', message })
   const showError = (message: string) => setStatus({ kind: 'error', message })
@@ -54,6 +64,31 @@ export default function ImportExport() {
     el.focus()
     el.select()
   }, [exportModalJson])
+
+  useEffect(() => {
+    if (!pwaModalOpen || pwaHtml || pwaLoading) return
+    let cancelled = false
+    setPwaLoading(true)
+    setPwaError(false)
+    fetch(PWA_EXPLAIN_MD_URL)
+      .then(r => {
+        if (!r.ok) throw new Error('fetch failed')
+        return r.text()
+      })
+      .then(raw => {
+        if (cancelled) return
+        setPwaHtml(pwaExplainMarkdownToHtml(filterPwaExplainMarkdown(raw)))
+      })
+      .catch(() => {
+        if (!cancelled) setPwaError(true)
+      })
+      .finally(() => {
+        if (!cancelled) setPwaLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [pwaModalOpen, pwaHtml, pwaLoading])
 
   const handleExportFile = () => {
     try {
@@ -126,18 +161,46 @@ export default function ImportExport() {
             {t('about.transfer.importClipboard')}
           </button>
         </div>
-        <p className="about-transfer-migrate">
-          {t('about.transfer.importMigrateNote')}
-          {' '}
-          <a
-            href={NEW_SITE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {NEW_SITE_URL}
-          </a>
-          {t('about.transfer.importMigrateNoteSuffix')}
-        </p>
+
+        <div className="about-transfer-migrate">
+          <p className="about-transfer-migrate-lead">{t('about.transfer.importMigrateLead')}</p>
+
+          <div className="about-transfer-migrate-row">
+            <i className="far fa-window-restore" aria-hidden="true" />
+            <p>
+              {t('about.transfer.importMigrateWebBefore')}
+              <strong>{t('about.transfer.exportTitle')}</strong>
+              {t('about.transfer.importMigrateWebMid')}
+              <a href={NEW_SITE_IMPORT_URL} target="_blank" rel="noopener noreferrer">
+                {t('about.transfer.importMigrateWebLink')}
+              </a>
+              {t('about.transfer.importMigrateWebAfter')}
+            </p>
+          </div>
+
+          <div className="about-transfer-migrate-row">
+            <i className="fas fa-mobile" aria-hidden="true" />
+            <p>
+              {t('about.transfer.importMigratePwaBefore')}
+              <button
+                type="button"
+                className="about-transfer-pwa-term"
+                onClick={() => setPwaModalOpen(true)}
+              >
+                {t('about.transfer.importMigratePwaTerm')}
+              </button>
+              {t('about.transfer.importMigratePwaMid')}
+              <strong>{t('about.transfer.exportTitle')}</strong>
+              {t('about.transfer.importMigratePwaAfterExport')}
+              <a href={NEW_SITE_PWA_URL} target="_blank" rel="noopener noreferrer">
+                {t('about.transfer.importMigratePwaLink')}
+              </a>
+              {t('about.transfer.importMigratePwaAfterLink')}
+              <strong>{t('about.transfer.importMigratePwaAboutPath')}</strong>
+              {t('about.transfer.importMigratePwaEnd')}
+            </p>
+          </div>
+        </div>
       </div>
 
       {status && (
@@ -204,6 +267,54 @@ export default function ImportExport() {
                 onFocus={e => e.currentTarget.select()}
                 aria-label={t('about.transfer.exportClipboardModalTitle')}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pwaModalOpen && (
+        <div
+          className="modal-overlay"
+          onClick={() => setPwaModalOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="modal-window transfer-json-modal pwa-explain-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pwa-explain-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setPwaModalOpen(false)}
+              aria-label={t('common.close')}
+            >
+              ×
+            </button>
+            <div className="modal-body">
+              <h2 id="pwa-explain-title" className="transfer-json-modal-title">
+                {t('about.transfer.pwaExplainTitle')}
+              </h2>
+              {pwaLoading && (
+                <p className="transfer-json-modal-desc">{t('common.loading')}</p>
+              )}
+              {pwaError && !pwaLoading && (
+                <p className="transfer-json-modal-desc">
+                  {t('about.transfer.pwaExplainFailed')}
+                  {' '}
+                  <a href={PWA_EXPLAIN_MD_URL} target="_blank" rel="noopener noreferrer">
+                    {t('about.transfer.pwaExplainOpenSource')}
+                  </a>
+                </p>
+              )}
+              {pwaHtml && !pwaLoading && (
+                <div
+                  className="pwa-explain-body"
+                  dangerouslySetInnerHTML={{ __html: pwaHtml }}
+                />
+              )}
             </div>
           </div>
         </div>

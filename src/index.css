@@ -2156,12 +2156,92 @@ button.calendar-holiday-label {
   line-height: 1.55;
   color: var(--text);
 }
-.about-transfer-migrate a {
-  color: var(--primary);
-  word-break: break-all;
+.about-transfer-migrate-lead {
+  margin: 0 0 12px;
 }
-.about-transfer-migrate a:hover {
+.about-transfer-migrate-row {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr;
+  column-gap: 10px;
+  align-items: start;
+  margin: 0 0 10px;
+}
+.about-transfer-migrate-row:last-child {
+  margin-bottom: 0;
+}
+.about-transfer-migrate-row > i {
+  margin-top: 0.2em;
+  width: 1.25rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.about-transfer-migrate-row > p {
+  margin: 0;
+  text-indent: 0;
+}
+.about-transfer-migrate a,
+.about-transfer-pwa-term {
+  color: var(--primary);
+}
+.about-transfer-migrate a:hover,
+.about-transfer-pwa-term:hover {
   text-decoration: underline;
+}
+.about-transfer-pwa-term {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  color: var(--primary);
+}
+.pwa-explain-modal {
+  width: min(640px, 100%);
+}
+.pwa-explain-body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.pwa-explain-body h1 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+.pwa-explain-body h2 {
+  margin: 16px 0 8px;
+  font-size: 15px;
+}
+.pwa-explain-body p {
+  margin: 0 0 10px;
+}
+.pwa-explain-body ul {
+  margin: 0 0 12px;
+  padding-left: 1.25rem;
+}
+.pwa-explain-body li {
+  margin: 0 0 4px;
+}
+.pwa-explain-body a {
+  color: var(--primary);
+}
+.pwa-explain-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+.pwa-explain-table th,
+.pwa-explain-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.pwa-explain-table th {
+  background: #f8f9fa;
 }
 .about-transfer-h2 {
   font-size: 15px;
