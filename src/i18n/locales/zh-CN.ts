@@ -101,8 +101,8 @@ const zhCN: TranslationTree = {
       importMigratePwaAboutPath: '关于-导入/导出',
       importMigratePwaEnd: '页面进行数据导入。',
       pwaExplainTitle: '什么是 PWA',
-      pwaExplainFailed: '无法加载说明内容。',
-      pwaExplainOpenSource: '打开原文',
+      pwaExplainSourceLabel: 'Source:',
+      pwaExplainSourceInChinese: ' (in Chinese)',
       importConfirm:
         '导入将覆盖语言偏好、默认页、Teaching Plan 已阅状态、已选课程与备选列表。是否继续？',
       programmeMismatch:

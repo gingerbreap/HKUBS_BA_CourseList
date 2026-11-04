@@ -1,29 +1,16 @@
-/** Source essay used for the in-app “What is PWA” explainer. */
-export const PWA_EXPLAIN_MD_URL =
-  'https://raw.githubusercontent.com/lavas-project/pwa-book/refs/heads/master/chapter01/2-what-is-pwa.md'
+import type { Locale } from '../i18n/types'
+import pwaExplainZhCN from '../data/pwa-explain.zh-CN.md?raw'
+import pwaExplainZhHK from '../data/pwa-explain.zh-HK.md?raw'
+import pwaExplainEn from '../data/pwa-explain.en.md?raw'
 
-/**
- * Strip sections the product asked to hide:
- * - first body paragraph after the title
- * - Google checklist block through “每个页面都有独立的 URL”
- * - last two closing paragraphs
- */
-export function filterPwaExplainMarkdown(raw: string): string {
-  let text = raw.replace(/\r\n/g, '\n')
+/** Canonical source of the Chinese essay (attribution footer). */
+export const PWA_EXPLAIN_SOURCE_URL =
+  'https://github.com/lavas-project/pwa-book/blob/master/chapter01/2-what-is-pwa.md'
 
-  text = text.replace(
-    /(# 什么是 PWA\n\n)Google 提出 PWA[\s\S]*?\n\n(?=PWA 主要特点)/,
-    '$1',
-  )
-
-  text = text.replace(
-    /\nGoogle 在官网一篇名为[\s\S]*?每个页面都有独立的 URL\n+/,
-    '\n',
-  )
-
-  text = text.replace(/\nPWA 能给站点体验带来飞跃式的提升[\s\S]*$/, '\n')
-
-  return `${text.trim()}\n`
+export function pwaExplainMarkdownForLocale(locale: Locale): string {
+  if (locale === 'zh-HK') return pwaExplainZhHK
+  if (locale === 'en') return pwaExplainEn
+  return pwaExplainZhCN
 }
 
 function escapeHtml(s: string): string {
@@ -41,11 +28,10 @@ function inlineFormat(s: string): string {
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
   )
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-  // Strip rare control chars from the source MD
   return out.replace(/\u0008/g, '')
 }
 
-/** Minimal Markdown → HTML for the filtered PWA essay (headings, lists, tables, links). */
+/** Minimal Markdown → HTML for the embedded PWA essay. */
 export function pwaExplainMarkdownToHtml(md: string): string {
   const lines = md.replace(/\r\n/g, '\n').split('\n')
   const parts: string[] = []
@@ -67,8 +53,7 @@ export function pwaExplainMarkdownToHtml(md: string): string {
   }
 
   while (i < lines.length) {
-    const line = lines[i]
-    const trimmed = line.trim()
+    const trimmed = lines[i].trim()
 
     if (!trimmed) {
       closeUl()
@@ -125,7 +110,6 @@ export function pwaExplainMarkdownToHtml(md: string): string {
 
     closeUl()
     closeTable()
-    // Merge soft-wrapped continuation lines into one paragraph
     let para = trimmed
     while (i + 1 < lines.length) {
       const next = lines[i + 1].trim()

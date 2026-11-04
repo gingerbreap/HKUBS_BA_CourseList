@@ -101,8 +101,8 @@ const zhHK: TranslationTree = {
       importMigratePwaAboutPath: '關於-匯入/匯出',
       importMigratePwaEnd: '頁面進行資料匯入。',
       pwaExplainTitle: '什麼是 PWA',
-      pwaExplainFailed: '無法載入說明內容。',
-      pwaExplainOpenSource: '打開原文',
+      pwaExplainSourceLabel: 'Source:',
+      pwaExplainSourceInChinese: ' (in Chinese)',
       importConfirm:
         '匯入將覆蓋語言偏好、預設頁、Teaching Plan 已閱狀態、已選課程與備選列表。是否繼續？',
       programmeMismatch:

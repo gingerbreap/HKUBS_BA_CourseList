@@ -103,8 +103,8 @@ const en: TranslationTree = {
       importMigratePwaAboutPath: 'About → Import / Export',
       importMigratePwaEnd: ' to import your data.',
       pwaExplainTitle: 'What is a PWA',
-      pwaExplainFailed: 'Could not load the explainer.',
-      pwaExplainOpenSource: 'Open source article',
+      pwaExplainSourceLabel: 'Source:',
+      pwaExplainSourceInChinese: ' (in Chinese)',
       importConfirm:
         'Import will replace your language preference, default page, Teaching Plan read status, selected courses, and wishlist. Continue?',
       programmeMismatch:

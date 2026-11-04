@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AboutBackLink from '../components/AboutBackLink'
 import { useI18n } from '../i18n/context'
 import {
@@ -9,8 +9,8 @@ import {
   snapshotToJson,
 } from '../utils/userDataTransfer'
 import {
-  PWA_EXPLAIN_MD_URL,
-  filterPwaExplainMarkdown,
+  PWA_EXPLAIN_SOURCE_URL,
+  pwaExplainMarkdownForLocale,
   pwaExplainMarkdownToHtml,
 } from '../utils/pwaExplainMarkdown'
 
@@ -33,16 +33,18 @@ const NEW_SITE_IMPORT_URL = 'https://tpghelper.gbrp.top/msba/#/about/import-expo
 const NEW_SITE_PWA_URL = 'https://tpghelper.gbrp.top/msba/#/about/pwa'
 
 export default function ImportExport() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const exportJsonRef = useRef<HTMLTextAreaElement>(null)
   const [status, setStatus] = useState<Status | null>(null)
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [exportModalJson, setExportModalJson] = useState<string | null>(null)
   const [pwaModalOpen, setPwaModalOpen] = useState(false)
-  const [pwaHtml, setPwaHtml] = useState<string | null>(null)
-  const [pwaLoading, setPwaLoading] = useState(false)
-  const [pwaError, setPwaError] = useState(false)
+
+  const pwaHtml = useMemo(
+    () => pwaExplainMarkdownToHtml(pwaExplainMarkdownForLocale(locale)),
+    [locale],
+  )
 
   const showOk = (message: string) => setStatus({ kind: 'ok', message })
   const showError = (message: string) => setStatus({ kind: 'error', message })
@@ -64,31 +66,6 @@ export default function ImportExport() {
     el.focus()
     el.select()
   }, [exportModalJson])
-
-  useEffect(() => {
-    if (!pwaModalOpen || pwaHtml || pwaLoading) return
-    let cancelled = false
-    setPwaLoading(true)
-    setPwaError(false)
-    fetch(PWA_EXPLAIN_MD_URL)
-      .then(r => {
-        if (!r.ok) throw new Error('fetch failed')
-        return r.text()
-      })
-      .then(raw => {
-        if (cancelled) return
-        setPwaHtml(pwaExplainMarkdownToHtml(filterPwaExplainMarkdown(raw)))
-      })
-      .catch(() => {
-        if (!cancelled) setPwaError(true)
-      })
-      .finally(() => {
-        if (!cancelled) setPwaLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [pwaModalOpen, pwaHtml, pwaLoading])
 
   const handleExportFile = () => {
     try {
@@ -297,24 +274,18 @@ export default function ImportExport() {
               <h2 id="pwa-explain-title" className="transfer-json-modal-title">
                 {t('about.transfer.pwaExplainTitle')}
               </h2>
-              {pwaLoading && (
-                <p className="transfer-json-modal-desc">{t('common.loading')}</p>
-              )}
-              {pwaError && !pwaLoading && (
-                <p className="transfer-json-modal-desc">
-                  {t('about.transfer.pwaExplainFailed')}
-                  {' '}
-                  <a href={PWA_EXPLAIN_MD_URL} target="_blank" rel="noopener noreferrer">
-                    {t('about.transfer.pwaExplainOpenSource')}
-                  </a>
-                </p>
-              )}
-              {pwaHtml && !pwaLoading && (
-                <div
-                  className="pwa-explain-body"
-                  dangerouslySetInnerHTML={{ __html: pwaHtml }}
-                />
-              )}
+              <div
+                className="pwa-explain-body"
+                dangerouslySetInnerHTML={{ __html: pwaHtml }}
+              />
+              <p className="pwa-explain-source">
+                {t('about.transfer.pwaExplainSourceLabel')}
+                {' '}
+                <a href={PWA_EXPLAIN_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+                  {PWA_EXPLAIN_SOURCE_URL}
+                </a>
+                {locale === 'en' ? t('about.transfer.pwaExplainSourceInChinese') : ''}
+              </p>
             </div>
           </div>
         </div>
