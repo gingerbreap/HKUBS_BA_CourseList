@@ -78,10 +78,16 @@ const zhHK: TranslationTree = {
       exportFileOk: '已下載 JSON 檔。',
       exportClipboardOk: '已複製 JSON 到剪貼簿。',
       exportFailed: '匯出失敗，請重試。',
+      toastCopied: '已複製',
+      exportClipboardModalTitle: '匯出到剪貼簿',
+      exportClipboardModalDesc:
+        '已嘗試複製至剪貼簿。若系統限制導致無法自動複製，請點擊下方文本手動複製。',
       importTitle: '匯入',
       importDesc: '可從 JSON 檔匯入，或從剪貼簿讀取 JSON。匯入將覆蓋目前偏好與課程列表。',
       importFile: '從 JSON 檔匯入',
       importClipboard: '從剪貼簿匯入 JSON',
+      importMigrateNote: '本站匯入功能已停用。請遷移至新版站點',
+      importMigrateNoteSuffix: '或其 PWA 應用繼續匯入與使用。',
       importConfirm:
         '匯入將覆蓋語言偏好、預設頁、Teaching Plan 已閱狀態、已選課程與備選列表。是否繼續？',
       programmeMismatch:

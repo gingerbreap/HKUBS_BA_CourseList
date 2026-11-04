@@ -2143,6 +2143,26 @@ button.calendar-holiday-label {
   padding: 16px;
   margin-bottom: 12px;
 }
+.about-transfer-card--import-disabled .about-transfer-h2,
+.about-transfer-card--import-disabled .about-transfer-desc,
+.about-transfer-card--import-disabled .about-transfer-actions {
+  opacity: 0.45;
+}
+.about-transfer-migrate {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.about-transfer-migrate a {
+  color: var(--primary);
+  word-break: break-all;
+}
+.about-transfer-migrate a:hover {
+  text-decoration: underline;
+}
 .about-transfer-h2 {
   font-size: 15px;
   font-weight: 600;
@@ -2192,6 +2212,72 @@ button.calendar-holiday-label {
 }
 .about-transfer-status--error {
   color: var(--error);
+}
+
+.transfer-toast {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+.transfer-toast--ok {
+  background: #e6f4ea;
+  color: #0d652d;
+}
+.transfer-toast--error {
+  background: #fce8e6;
+  color: #c5221f;
+}
+.transfer-toast i {
+  font-size: 16px;
+}
+
+.modal-window.transfer-json-modal {
+  width: min(560px, 100%);
+  max-height: min(85vh, 720px);
+}
+.transfer-json-modal-title {
+  margin: 0 28px 8px 0;
+  font-size: 18px;
+}
+.transfer-json-modal-desc {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.transfer-json-textarea {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  max-height: min(48vh, 360px);
+  resize: vertical;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #f8f9fa;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+.transfer-json-textarea:focus {
+  outline: 2px solid var(--primary-light);
+  border-color: var(--primary);
 }
 
 /* Teaching Plan archive (card layout, not yellow notice) */

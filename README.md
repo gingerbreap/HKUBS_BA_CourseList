@@ -17,6 +17,7 @@
 |------|------|
 | [`REQUIREMENTS.md`](REQUIREMENTS.md) | 产品需求与验收标准 |
 | [`src/teachingPlan/README.md`](src/teachingPlan/README.md) | Teaching Plan PDF 同步检查清单 |
+| [`docs/AGENT_MIGRATION_GUIDE.md`](docs/AGENT_MIGRATION_GUIDE.md) | **给 Agent**：fork 本站结构建立新专业选课站的迁移指南 |
 
 ## 本地开发
 ```bash

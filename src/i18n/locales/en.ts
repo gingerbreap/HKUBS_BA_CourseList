@@ -80,10 +80,16 @@ const en: TranslationTree = {
       exportFileOk: 'JSON file downloaded.',
       exportClipboardOk: 'JSON copied to clipboard.',
       exportFailed: 'Export failed. Please try again.',
+      toastCopied: 'Copied',
+      exportClipboardModalTitle: 'Export to clipboard',
+      exportClipboardModalDesc:
+        'We tried to copy to the clipboard. If your system blocked automatic copy, tap the text below to copy manually.',
       importTitle: 'Import',
       importDesc: 'Load from a JSON file or paste JSON from the clipboard. This replaces current preferences and course lists.',
       importFile: 'Import JSON file',
       importClipboard: 'Import JSON from clipboard',
+      importMigrateNote: 'Import on this site is disabled. Please migrate to the new site',
+      importMigrateNoteSuffix: ' or its PWA app to continue importing and using your data.',
       importConfirm:
         'Import will replace your language preference, default page, Teaching Plan read status, selected courses, and wishlist. Continue?',
       programmeMismatch:

@@ -78,10 +78,16 @@ const zhCN: TranslationTree = {
       exportFileOk: '已下载 JSON 文件。',
       exportClipboardOk: '已复制 JSON 到剪贴板。',
       exportFailed: '导出失败，请重试。',
+      toastCopied: '已复制',
+      exportClipboardModalTitle: '导出到剪贴板',
+      exportClipboardModalDesc:
+        '已尝试复制至剪贴板。若系统限制导致无法自动复制，请点击下方文本手动复制。',
       importTitle: '导入',
       importDesc: '可从 JSON 文件导入，或从剪贴板读取 JSON。导入将覆盖当前偏好与课程列表。',
       importFile: '从 JSON 文件导入',
       importClipboard: '从剪贴板导入 JSON',
+      importMigrateNote: '本站导入功能已停用。请迁移至新版站点',
+      importMigrateNoteSuffix: '或其 PWA 应用继续导入与使用。',
       importConfirm:
         '导入将覆盖语言偏好、默认页、Teaching Plan 已阅状态、已选课程与备选列表。是否继续？',
       programmeMismatch:

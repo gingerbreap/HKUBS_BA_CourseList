@@ -1,17 +1,11 @@
-import { useRef, useState, type ChangeEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
 import AboutBackLink from '../components/AboutBackLink'
 import { useI18n } from '../i18n/context'
 import {
-  PLANNER_PROGRAMME,
-  applyUserDataSnapshot,
   buildUserDataSnapshot,
   copyTextToClipboard,
   defaultExportFilename,
   downloadJsonFile,
-  parseUserDataJson,
-  readFileAsText,
-  readTextFromClipboard,
   snapshotToJson,
 } from '../utils/userDataTransfer'
 
@@ -22,15 +16,44 @@ interface Status {
   message: string
 }
 
+type ToastKind = 'ok' | 'error'
+
+interface ToastState {
+  kind: ToastKind
+  message: string
+}
+
+const TOAST_MS = 2400
+const NEW_SITE_URL = 'https://tpghelper.gbrp.top/msba'
+
 export default function ImportExport() {
   const { t } = useI18n()
-  const navigate = useNavigate()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const exportJsonRef = useRef<HTMLTextAreaElement>(null)
   const [status, setStatus] = useState<Status | null>(null)
   const [busy, setBusy] = useState(false)
+  const [toast, setToast] = useState<ToastState | null>(null)
+  const [exportModalJson, setExportModalJson] = useState<string | null>(null)
 
   const showOk = (message: string) => setStatus({ kind: 'ok', message })
   const showError = (message: string) => setStatus({ kind: 'error', message })
+
+  const showToast = (kind: ToastKind, message: string) => {
+    setToast({ kind, message })
+  }
+
+  useEffect(() => {
+    if (!toast) return
+    const id = window.setTimeout(() => setToast(null), TOAST_MS)
+    return () => window.clearTimeout(id)
+  }, [toast])
+
+  useEffect(() => {
+    if (!exportModalJson) return
+    const el = exportJsonRef.current
+    if (!el) return
+    el.focus()
+    el.select()
+  }, [exportModalJson])
 
   const handleExportFile = () => {
     try {
@@ -46,8 +69,13 @@ export default function ImportExport() {
     setBusy(true)
     try {
       const json = snapshotToJson(buildUserDataSnapshot())
-      await copyTextToClipboard(json)
-      showOk(t('about.transfer.exportClipboardOk'))
+      try {
+        await copyTextToClipboard(json)
+      } catch {
+        /* still show modal for manual copy */
+      }
+      showToast('ok', t('about.transfer.toastCopied'))
+      setExportModalJson(json)
     } catch {
       showError(t('about.transfer.exportFailed'))
     } finally {
@@ -55,82 +83,16 @@ export default function ImportExport() {
     }
   }
 
-  const applyImportText = async (text: string) => {
-    const parsed = parseUserDataJson(text)
-    if (!parsed.ok) {
-      showError(
-        parsed.error === 'invalidJson'
-          ? t('about.transfer.importInvalidJson')
-          : t('about.transfer.importInvalidShape'),
-      )
-      return
-    }
-
-    if (parsed.data.programme !== PLANNER_PROGRAMME) {
-      const proceed = window.confirm(
-        t('about.transfer.programmeMismatch', {
-          expected: PLANNER_PROGRAMME,
-          actual: parsed.data.programme,
-        }),
-      )
-      if (!proceed) {
-        showError(t('about.transfer.importCancelled'))
-        return
-      }
-    }
-
-    const proceed = window.confirm(t('about.transfer.importConfirm'))
-    if (!proceed) {
-      showError(t('about.transfer.importCancelled'))
-      return
-    }
-
+  const handleExportJsonClick = async () => {
+    const el = exportJsonRef.current
+    if (!el || !exportModalJson) return
+    el.focus()
+    el.select()
     try {
-      await applyUserDataSnapshot(parsed.data)
+      await copyTextToClipboard(exportModalJson)
+      showToast('ok', t('about.transfer.toastCopied'))
     } catch {
-      showError(t('about.transfer.importFailed'))
-      return
-    }
-    showOk(t('about.transfer.importOk'))
-    // Reload so locale / selections / wishlist hooks re-read storage.
-    window.setTimeout(() => {
-      navigate('/about', { replace: true })
-      window.location.reload()
-    }, 400)
-  }
-
-  const handleImportClipboard = async () => {
-    setBusy(true)
-    try {
-      const text = await readTextFromClipboard()
-      if (!text.trim()) {
-        showError(t('about.transfer.importEmptyClipboard'))
-        return
-      }
-      await applyImportText(text)
-    } catch {
-      showError(t('about.transfer.clipboardUnavailable'))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const handleImportFilePick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleImportFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-    setBusy(true)
-    try {
-      const text = await readFileAsText(file)
-      await applyImportText(text)
-    } catch {
-      showError(t('about.transfer.importFailed'))
-    } finally {
-      setBusy(false)
+      /* selection still helps manual copy */
     }
   }
 
@@ -147,30 +109,35 @@ export default function ImportExport() {
           <button type="button" className="about-transfer-btn" disabled={busy} onClick={handleExportFile}>
             {t('about.transfer.exportFile')}
           </button>
-          <button type="button" className="about-transfer-btn" disabled={busy} onClick={handleExportClipboard}>
+          <button type="button" className="about-transfer-btn" disabled={busy} onClick={() => { void handleExportClipboard() }}>
             {t('about.transfer.exportClipboard')}
           </button>
         </div>
       </div>
 
-      <div className="card about-transfer-card">
+      <div className="card about-transfer-card about-transfer-card--import-disabled">
         <h2 className="about-transfer-h2">{t('about.transfer.importTitle')}</h2>
         <p className="about-transfer-desc">{t('about.transfer.importDesc')}</p>
         <div className="about-transfer-actions">
-          <button type="button" className="about-transfer-btn" disabled={busy} onClick={handleImportFilePick}>
+          <button type="button" className="about-transfer-btn" disabled aria-disabled="true">
             {t('about.transfer.importFile')}
           </button>
-          <button type="button" className="about-transfer-btn" disabled={busy} onClick={handleImportClipboard}>
+          <button type="button" className="about-transfer-btn" disabled aria-disabled="true">
             {t('about.transfer.importClipboard')}
           </button>
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json,.json"
-          className="about-transfer-file-input"
-          onChange={handleImportFileChange}
-        />
+        <p className="about-transfer-migrate">
+          {t('about.transfer.importMigrateNote')}
+          {' '}
+          <a
+            href={NEW_SITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {NEW_SITE_URL}
+          </a>
+          {t('about.transfer.importMigrateNoteSuffix')}
+        </p>
       </div>
 
       {status && (
@@ -182,6 +149,64 @@ export default function ImportExport() {
         >
           {status.message}
         </p>
+      )}
+
+      {toast && (
+        <div
+          className={`transfer-toast transfer-toast--${toast.kind}`}
+          role="status"
+          aria-live="polite"
+        >
+          <i
+            className={toast.kind === 'ok' ? 'far fa-check-circle' : 'far fa-times-circle'}
+            aria-hidden="true"
+          />
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {exportModalJson != null && (
+        <div
+          className="modal-overlay"
+          onClick={() => setExportModalJson(null)}
+          role="presentation"
+        >
+          <div
+            className="modal-window transfer-json-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="transfer-export-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setExportModalJson(null)}
+              aria-label={t('common.close')}
+            >
+              ×
+            </button>
+            <div className="modal-body">
+              <h2 id="transfer-export-title" className="transfer-json-modal-title">
+                {t('about.transfer.exportClipboardModalTitle')}
+              </h2>
+              <p className="transfer-json-modal-desc">
+                {t('about.transfer.exportClipboardModalDesc')}
+              </p>
+              <textarea
+                ref={exportJsonRef}
+                className="transfer-json-textarea"
+                readOnly
+                value={exportModalJson}
+                onClick={() => {
+                  void handleExportJsonClick()
+                }}
+                onFocus={e => e.currentTarget.select()}
+                aria-label={t('about.transfer.exportClipboardModalTitle')}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
